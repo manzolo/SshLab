@@ -87,7 +87,18 @@ export function avvia() {
  * terminale nero e crede che sia rotto.
  */
 export function risveglia() {
-    setTimeout(() => emulatore?.serial0_send("\n"), 250);
+    // Ctrl-L, non "\n": un a-capo esegue un comando vuoto e lascia a schermo un
+    // prompt in piu', come se qualcuno avesse premuto Invio al posto tuo. Ctrl-L
+    // chiede a readline di ridisegnare il prompt e basta.
+    //
+    // E su TUTTE E DUE le seriali: le macchine sono due, e un terminale del
+    // server che resta nero al primo caricamento sembra rotto esattamente come
+    // sembrava rotto quello del pc prima che questo colpetto esistesse.
+    setTimeout(() => {
+        const ctrlL = new TextEncoder().encode("\x0c");
+        emulatore?.serial_send_bytes(0, ctrlL);
+        emulatore?.serial_send_bytes(2, ctrlL);
+    }, 250);
 }
 
 /**

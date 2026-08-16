@@ -6,7 +6,13 @@
 
 import { macchina } from "./machine.js";
 
-const TIMEOUT = { check: 15000, seed: 30000, sh: 30000, ping: 5000, write: 15000, reset: 30000, solve: 30000 };
+// Tempi piu' larghi di quelli del lab fratello, per una ragione precisa: la' un
+// check guardava dei file, qui APRE UNA CONNESSIONE SSH. Su una CPU emulata un
+// handshake completo costa una decina di secondi, e una soluzione che ne fa due di
+// fila piu' una generazione di chiave arriva tranquillamente a mezzo minuto.
+// Timeout stretti non proteggono da niente: trasformano un'attesa legittima in
+// «la verifica non ha risposto», cioe' in un guasto che non esiste.
+const TIMEOUT = { ping: 5000, write: 30000, check: 60000, seed: 90000, sh: 90000, reset: 60000, solve: 120000 };
 
 let inizializzato = false;
 let buffer = "";

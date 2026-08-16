@@ -16,7 +16,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const URL_BASE = process.argv[2] || "http://127.0.0.1:8801/";
+const URL_BASE = process.argv[2] || "http://127.0.0.1:8802/";
 const PORTA = 9466;
 const profilo = mkdtempSync(join(tmpdir(), "linuxlab-btn-"));
 
@@ -85,7 +85,7 @@ attivi ? ok("i pulsanti si accendono solo quando il mondo è pronto")
 
 // testo attualmente visibile nel terminale
 const testoTerminale = () => val(`(() => {
-    const r = document.querySelectorAll('.terminale .xterm-rows > div');
+    const r = document.querySelectorAll('.host-schermo .xterm-rows > div');
     return Array.from(r).map(d => d.textContent).join('\\n').replace(/\\s+$/,'');
 })()`);
 
@@ -133,7 +133,7 @@ if (dopo.split("\n").filter(Boolean).length < prima.split("\n").filter(Boolean).
 else ko("lo schermo non è stato svuotato: sembra ancora che non sia successo niente");
 
 // dopo il reset la macchina deve essere di nuovo utilizzabile
-const risposta = await val(`window.__linuxlab.agente.ping().then(r => r.out).catch(e => 'ERRORE ' + e.message)`);
+const risposta = await val(`window.__sshlab.agente.ping().then(r => r.out).catch(e => 'ERRORE ' + e.message)`);
 /pong/.test(risposta || "") ? ok("dopo il reset la macchina risponde ancora")
                             : ko(`dopo il reset la macchina non risponde: ${risposta}`);
 

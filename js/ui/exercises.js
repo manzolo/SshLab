@@ -10,7 +10,7 @@
 import { t, tr } from "../i18n.js";
 import { preparaEsercizio, verificaEsercizio, ricominciaEsercizio } from "../lab/runner.js";
 import { semePer, nuovoSeme, segnaFatto, eFatto, annotaComandi } from "../storage.js";
-import { scriviNota, scriviBlocco, pulisciTerminale } from "../lab/terminal.js";
+import { scriviNota, scriviBlocco, pulisciTerminale, UART } from "../lab/terminal.js";
 import { shell } from "../lab/agent.js";
 
 const el = (tag, cls, html) => {
@@ -143,10 +143,15 @@ async function apri(cap, es, box) {
     // Fa vedere com'e' fatto il mondo adesso. L'`ls` lo esegue il canale di
     // servizio e il risultato viene STAMPATO nel terminale: non viene digitato,
     // cosi' non si mescola a quello che l'utente sta scrivendo.
+    // Le macchine sono due, e un esercizio puo' rimescolare il mondo di entrambe:
+    // il segno a schermo va dato dove serve. Il ~/.ssh del pc sul terminale del pc,
+    // quello del server sul suo — chiedendolo dentro il namespace giusto.
     const mostraContenuto = async () => {
         try {
-            const r = await shell('ls -a --group-directories-first "$LAB" 2>/dev/null | tail -n +3');
-            scriviBlocco(r.out?.trim() || "(la cartella è vuota)");
+            const pc = await shell('ls -a "$LAB" /home/andrea/.ssh 2>/dev/null | tail -n +2');
+            scriviBlocco(UART.pc, pc.out?.trim() || "(niente ancora)");
+            const srv = await shell('ls -a /home/deploy/.ssh 2>/dev/null | tail -n +2');
+            scriviBlocco(UART.server, srv.out?.trim() || "(niente ancora)");
         } catch { /* se non risponde, pazienza: il banner c'e' comunque */ }
     };
 
@@ -156,7 +161,8 @@ async function apri(cap, es, box) {
         try {
             await azione();
             zona.replaceChildren();
-            scriviNota(nota, 79);
+            scriviNota(UART.pc, nota, 79);
+            scriviNota(UART.server, nota, 179);
             await mostraContenuto();
         } catch (e) {
             zona.replaceChildren(el("div", "controllo fail", e.message));

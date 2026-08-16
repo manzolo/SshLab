@@ -6,14 +6,14 @@
 // funzioni su un Linux vero, dentro un browser vero.
 //
 // Uso:  node tools/e2e.mjs [url] [capitoli...]
-//   es: node tools/e2e.mjs http://127.0.0.1:8801/ ch01 ch03
+//   es: node tools/e2e.mjs http://127.0.0.1:8802/ ch01 ch03
 
 import { spawn } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 
-const URL_BASE = process.argv[2] || "http://127.0.0.1:8801/";
+const URL_BASE = process.argv[2] || "http://127.0.0.1:8802/";
 const CAPITOLI = process.argv.slice(3);
 const PORTA = 9455;
 const BIN = process.env.CHROME || "google-chrome";
@@ -76,7 +76,7 @@ const ko = (m) => { console.log(`  ✗ ${m}`); problemi.push(m); esitoFinale = 1
     let pronta = false;
     for (let i = 0; i < 90; i++) {
         await dormi(1000);
-        pronta = await val("!!(window.__linuxlab && document.getElementById('labStato').classList.contains('pronta'))");
+        pronta = await val("!!(window.__sshlab && document.getElementById('labStato').classList.contains('pronta'))");
         if (pronta) break;
         const errore = await val("document.getElementById('labStato').classList.contains('errore')");
         if (errore) break;
@@ -84,15 +84,35 @@ const ko = (m) => { console.log(`  ✗ ${m}`); problemi.push(m); esitoFinale = 1
     pronta ? ok(`macchina pronta in ${((Date.now() - t0) / 1000).toFixed(1)} s`) : ko("la macchina non è diventata pronta");
     if (!pronta) { console.log(`\n${problemi.length} problemi`); process.exit(1); }
 
-    // 2) il terminale ha scritto qualcosa
-    const righeTerm = await val("document.querySelectorAll('.terminale .xterm-rows > div').length");
-    righeTerm > 0 ? ok(`terminale attivo (${righeTerm} righe)`) : ko("il terminale non ha righe");
+    // 2) i terminali hanno scritto qualcosa. TUTTI E DUE, ed e' il punto: un lab a
+    // due macchine dove la seconda resta nera e' un lab rotto, e un controllo
+    // complessivo ("ci sono delle righe") non se ne accorgerebbe, perche' quelle
+    // della prima gli bastano per passare.
+    const righePc  = await val("document.querySelectorAll('#terminalePc .xterm-rows > div').length");
+    const righeSrv = await val("document.querySelectorAll('#terminaleServer .xterm-rows > div').length");
+    righePc  > 0 ? ok(`terminale del pc attivo (${righePc} righe)`)      : ko("il terminale del pc non ha righe");
+    righeSrv > 0 ? ok(`terminale del server attivo (${righeSrv} righe)`) : ko("il terminale del server non ha righe");
+
+    // ...e devono essere due macchine DIVERSE: se per un errore di cablaggio le due
+    // xterm finissero sulla stessa seriale, a schermo sembrerebbe tutto a posto e il
+    // lab insegnerebbe una bugia.
+    const dueVere = await val(`(async () => {
+        const L = window.__sshlab;
+        const a = await L.agente.shell("ip -4 -o addr show veth-pc | awk '{print $4}'");
+        const b = await L.agente.shell("ip netns exec server ip -4 -o addr show veth-srv | awk '{print $4}'");
+        return JSON.stringify([(a.out || "").trim(), (b.out || "").trim()]);
+    })()`);
+    const [ipPc, ipSrv] = JSON.parse(dueVere || '["",""]');
+    (ipPc && ipSrv && ipPc !== ipSrv)
+        ? ok(`due host distinti: ${ipPc} e ${ipSrv}`)
+        : ko(`i due host non hanno indirizzi distinti: "${ipPc}" / "${ipSrv}"`);
 
     // 3) il ciclo didattico, su ogni capitolo richiesto
-    const daProvare = CAPITOLI.length ? CAPITOLI : await val("JSON.stringify(window.__linuxlab ? [] : [])").then(() => ["ch01"]);
+    const daProvare = CAPITOLI.length ? CAPITOLI : await val("JSON.stringify(window.__sshlab ? [] : [])").then(() => ["ch01"]);
     for (const capId of daProvare) {
         const esito = await val(`(async () => {
-            const L = window.__linuxlab;
+          try {
+            const L = window.__sshlab;
             const cap = await L.capitolo(${JSON.stringify(capId)});
             const risultati = [];
             for (const es of cap.exercises || []) {
@@ -108,8 +128,16 @@ const ko = (m) => { console.log(`  ✗ ${m}`); problemi.push(m); esitoFinale = 1
                 risultati.push({ es: es.id, prima: prima.superato, dopo: dopo.superato, out: dopo.grezzo });
             }
             return JSON.stringify(risultati);
+          } catch (e) {
+            // Senza questo, un errore qui dentro tornava come oggetto e si
+            // presentava come '"[object Object]" is not valid JSON': un messaggio
+            // che parla del messaggero e non dice niente del guasto.
+            return JSON.stringify([{ errore: (e && e.message) || String(e) }]);
+          }
         })()`);
-        for (const r of JSON.parse(esito || "[]")) {
+        const righeEsito = JSON.parse(typeof esito === "string" ? esito : "[]");
+        if (righeEsito.length === 1 && righeEsito[0].errore) ko(`${capId}: ${righeEsito[0].errore}`);
+        for (const r of righeEsito.filter(x => !x.errore)) {
             if (r.prima) ko(`${capId}.${r.es}: lo stato iniziale passa già (l'esercizio è vuoto)`);
             else ok(`${capId}.${r.es}: parte non superato`);
             if (r.dopo) ok(`${capId}.${r.es}: la soluzione di riferimento passa`);

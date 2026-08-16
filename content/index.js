@@ -3,30 +3,28 @@
 // I capitoli non ancora scritti compaiono lo stesso nel sommario, disattivati ma
 // con il loro obiettivo visibile: la roadmap sta dentro il prodotto. Un vuoto
 // dichiarato toglie l'ansia meglio di un vuoto nascosto.
+//
+// Qui non c'e' il campo `runtime` del lab fratello: la' serviva perche' alcuni
+// capitoli giravano in un container Docker sul computer di chi studia. Qui tutto
+// gira nel browser, comprese le due macchine — che e' il punto.
 
 export const CAPITOLI = [
-    { id: "ch01", num: 1,  runtime: "browser", carica: () => import("./ch01/chapter.js") },
-    { id: "ch02", num: 2,  runtime: "browser", carica: () => import("./ch02/chapter.js") },
-    { id: "ch03", num: 3,  runtime: "browser", carica: () => import("./ch03/chapter.js") },
-    { id: "ch04", num: 4,  runtime: "browser", carica: () => import("./ch04/chapter.js") },
-    { id: "ch05", num: 5,  runtime: "browser", carica: () => import("./ch05/chapter.js") },
-    { id: "ch06", num: 6,  runtime: "browser", carica: () => import("./ch06/chapter.js") },
-    { id: "ch07", num: 7,  runtime: "browser", carica: () => import("./ch07/chapter.js") },
-    { id: "ch08", num: 8,  runtime: "browser", carica: () => import("./ch08/chapter.js") },
-    { id: "ch09", num: 9,  runtime: "browser", carica: () => import("./ch09/chapter.js") },
-    { id: "ch10", num: 10, runtime: "browser", carica: () => import("./ch10/chapter.js") },
-    { id: "ch11", num: 11, runtime: "browser", carica: () => import("./ch11/chapter.js") },
-    { id: "ch12", num: 12, runtime: "browser", carica: () => import("./ch12/chapter.js") },
-    { id: "ch13", num: 13, runtime: "browser", carica: () => import("./ch13/chapter.js") },
-    { id: "ch14", num: 14, runtime: "browser", carica: () => import("./ch14/chapter.js") },
-    { id: "ch15", num: 15, runtime: "browser", carica: () => import("./ch15/chapter.js") },
-    { id: "ch16", num: 16, runtime: "browser", carica: () => import("./ch16/chapter.js") },
-    { id: "ch17", num: 17, runtime: "local",   carica: () => import("./ch17/chapter.js") },
-    { id: "ch18", num: 18, runtime: "local",   carica: () => import("./ch18/chapter.js") },
-    { id: "ch19", num: 19, runtime: "local",   carica: () => import("./ch19/chapter.js") },
-    { id: "ch20", num: 20, runtime: "local",   carica: () => import("./ch20/chapter.js") },
-    { id: "ch21", num: 21, runtime: "local",   carica: () => import("./ch21/chapter.js") },
-    { id: "ch22", num: 22, runtime: "local",   carica: () => import("./ch22/chapter.js") },
+    { id: "ch01", num: 1, carica: () => import("./ch01/chapter.js") },
+];
+
+// Quello che verra', dichiarato prima di essere scritto (vedi sopra).
+export const IN_ARRIVO = [
+    { num: 2,  titolo: { it: "La coppia di chiavi", en: "The key pair" } },
+    { num: 3,  titolo: { it: "L'impronta", en: "The fingerprint" } },
+    { num: 4,  titolo: { it: "authorized_keys: entrare senza password", en: "authorized_keys: getting in without a password" } },
+    { num: 5,  titolo: { it: "Chi firma cosa", en: "Who signs what" } },
+    { num: 6,  titolo: { it: "known_hosts e la prima volta", en: "known_hosts and the first time" } },
+    { num: 7,  titolo: { it: "«L'impronta è cambiata»", en: "“The fingerprint changed”" } },
+    { num: 8,  titolo: { it: "Permessi: cosa pretende sshd", en: "Permissions: what sshd demands" } },
+    { num: 9,  titolo: { it: "La passphrase", en: "The passphrase" } },
+    { num: 10, titolo: { it: "ssh-agent", en: "ssh-agent" } },
+    { num: 11, titolo: { it: "Troppe chiavi: IdentitiesOnly", en: "Too many keys: IdentitiesOnly" } },
+    { num: 12, titolo: { it: "Ruotare una chiave senza chiudersi fuori", en: "Rotating a key without locking yourself out" } },
 ];
 
 const cache = new Map();

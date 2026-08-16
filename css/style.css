@@ -92,14 +92,22 @@ a { color: var(--phosphor); }
 
 /* ---------------------------------------------------------------- impaginato */
 
+/* La griglia e' a RIGHE, non a colonne: il capitolo sopra, il laboratorio sotto a
+   tutta larghezza. Il lab fratello mette il terminale in una colonna laterale e
+   funziona, perche' li' il terminale e' uno. Qui sono due, e affiancati in una
+   colonna da 42% verrebbero 53 colonne l'uno — meno di un'impronta SHA256, che e'
+   proprio la cosa che questo lab deve far leggere. Su 1440px, cosi', ogni host ne
+   ha ~88. */
 #impaginato {
     flex: 1; min-height: 0;
-    display: grid; grid-template-columns: minmax(0, 1fr) minmax(380px, 42%);
+    display: grid; grid-template-rows: minmax(0, 1fr) auto;
 }
-@media (max-width: 1000px) { #impaginato { grid-template-columns: 1fr; } }
 
-.capitolo { overflow-y: auto; padding: 26px 30px 60px; max-width: 780px; }
-@media (max-width: 700px) { .capitolo { padding: 18px 16px 40px; } }
+.capitolo {
+    overflow-y: auto; padding: 26px 30px 40px;
+    max-width: 860px; width: 100%; margin: 0 auto;
+}
+@media (max-width: 700px) { .capitolo { padding: 18px 16px 30px; } }
 
 /* ---------------------------------------------------------------- capitolo */
 
@@ -173,9 +181,10 @@ body.pro .probox { display: block; }
 
 .lab {
     display: flex; flex-direction: column; min-height: 0;
-    border-left: 1px solid var(--panel-edge); background: var(--panel);
+    border-top: 2px solid var(--phosphor); background: var(--panel);
+    box-shadow: 0 -12px 24px -18px #000;
+    max-height: 62vh;
 }
-@media (max-width: 1000px) { .lab { border-left: 0; border-top: 1px solid var(--panel-edge); height: 70vh; } }
 
 .lab-testa {
     display: flex; align-items: center; gap: 8px;
@@ -187,8 +196,67 @@ body.pro .probox { display: block; }
 .lab-stato.errore { color: var(--rosso); }
 .spazio { flex: 1; }
 
-.terminale { background: var(--screen); padding: 6px 4px 6px 8px; height: 46%; min-height: 170px; }
-.terminale .xterm { height: 100%; }
+/* ------------------------------------------------------------- il banco a due
+   Due terminali affiancati, e qui la larghezza non e' un gusto: e' un requisito.
+   Il font mono a 13px avanza ~7,8px, quindi 80 colonne vogliono ~620px. Una riga
+   di impronta —
+       256 SHA256:ow2XD2iEk9ifz0CDq3hglZz4aqh7eXEuA7tAx3vv+xg andrea@pc (ED25519)
+   — sono 74 caratteri, ed e' l'oggetto centrale di meta' dei capitoli: se va a
+   capo in mezzo al base64 il lab sembra scadente proprio dove dovrebbe brillare.
+   Per questo il laboratorio qui prende tutta la larghezza della pagina, invece di
+   stare in una colonna stretta come nel lab fratello. */
+
+.banco { display: flex; min-height: 0; flex: 0 0 auto; }
+
+.host {
+    flex: 1 1 50%; min-width: 0;
+    display: flex; flex-direction: column;
+    border-right: 1px solid var(--panel-edge);
+    /* Quale sto guidando: il riquadro senza fuoco si smorza. Lo stato invisibile
+       e' il difetto che il lab fratello ha pagato tre volte, e con due terminali
+       "dove sto scrivendo" e' il primo che inganna. */
+    opacity: .62; transition: opacity .15s;
+}
+.host:last-child { border-right: 0; }
+.host.attivo { opacity: 1; }
+
+.host-testa {
+    display: flex; align-items: center; gap: 8px;
+    padding: 5px 10px; background: var(--panel-2);
+    border-bottom: 1px solid var(--panel-edge);
+    font: 12px var(--mono);
+}
+.host-pallino { width: 8px; height: 8px; border-radius: 50%; background: var(--ink-faint); }
+.host-nome { font-weight: 700; letter-spacing: .04em; }
+.host-utente { color: var(--ink-soft); }
+.host-utente::before { content: "@"; opacity: .5; }
+.host-ip { color: var(--ink-faint); }
+.host-ruolo { color: var(--ink-faint); font-size: 11px; }
+
+/* Il colore E' l'identita' della macchina: ciano il pc, ambra il server. Gli
+   stessi due colori tornano nel cursore di xterm (js/lab/terminal.js). */
+.host-pc    .host-pallino { background: var(--phosphor); }
+.host-pc    .host-nome    { color: var(--phosphor); }
+.host-server .host-pallino { background: var(--amber); }
+.host-server .host-nome    { color: var(--amber); }
+.host-pc.attivo    { box-shadow: inset 0 2px 0 var(--phosphor); }
+.host-server.attivo { box-shadow: inset 0 2px 0 var(--amber); }
+
+.host-schermo { background: var(--screen); padding: 6px 4px 6px 8px; height: 300px; }
+.host-schermo .xterm { height: 100%; }
+
+/* le schede: servono solo su schermo stretto */
+.schede { display: none; }
+.scheda {
+    flex: 1; padding: 8px; background: var(--panel-2); color: var(--ink-soft);
+    border: 0; border-bottom: 2px solid transparent; font: 600 12px var(--mono); cursor: pointer;
+}
+.scheda.on { color: var(--ink); border-bottom-color: var(--phosphor); background: var(--panel); }
+.scheda[data-host="server"].on { border-bottom-color: var(--amber); }
+.pallino {
+    display: inline-block; width: 6px; height: 6px; border-radius: 50%;
+    background: var(--amber); margin-left: 6px; vertical-align: middle;
+}
 
 .esercizi { flex: 1; overflow-y: auto; padding: 12px; border-top: 1px solid var(--panel-edge); }
 
@@ -325,6 +393,37 @@ body.pro .probox { display: block; }
 .avviso-mobile {
     background: #221d17; border: 1px solid #4a3a22; border-radius: var(--r);
     padding: 10px 14px; margin-bottom: 14px; font-size: 13.5px; color: var(--amber);
+}
+
+/* ------------------------------------------------------------- schermi stretti
+   Due punti di rottura, e in mezzo una scelta: sotto i 1200px i due terminali si
+   IMPILANO invece di stringersi. Stringendoli si perderebbero le colonne, che e'
+   esattamente la cosa che qui non si puo' perdere; impilandoli ogni host tiene la
+   larghezza piena della pagina e ci guadagna. */
+@media (max-width: 1200px) {
+    .banco { flex-direction: column; }
+    .host { flex: none; border-right: 0; border-bottom: 1px solid var(--panel-edge); }
+    .host:last-child { border-bottom: 0; }
+    .host-schermo { height: 210px; }
+    .lab { max-height: none; }
+}
+
+/* Sotto i 760px due terminali non sono due terminali: sono due fessure. Meglio
+   uno solo per volta, con un pallino sulla scheda nascosta quando quella macchina
+   ha stampato qualcosa — se il server risponde e non lo vedi, sembra che non
+   abbia risposto. */
+@media (max-width: 760px) {
+    html, body { height: auto; }
+    body { display: block; }
+    .barra { position: sticky; top: 0; z-index: 20; }
+    #impaginato { display: block; }
+    .capitolo { overflow: visible; height: auto; }
+
+    .schede { display: flex; }
+    .host { display: none; opacity: 1; }
+    .host.mostrato { display: flex; }
+    .host-schermo { height: 260px; }
+    .piede { position: static; }
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

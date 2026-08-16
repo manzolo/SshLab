@@ -5,10 +5,10 @@ import { get, set, progressiFatti } from "./storage.js";
 import { CAPITOLI, capitolo, primoCapitolo } from "../content/index.js";
 import { disegnaCapitolo } from "./ui/chapter.js";
 import { inizializzaEsercizi, disegnaEsercizi, macchinaPronta, esercizioCorrente } from "./ui/exercises.js";
-import { apriSommario, apriIntro, apriQuaderno } from "./ui/overlays.js";
+import { apriSommario, apriIntro } from "./ui/overlays.js";
 import { avvia, onProgresso, reimposta } from "./lab/machine.js";
 import { attendiAgente } from "./lab/agent.js";
-import { creaTerminale, adatta, pulisciTerminale, scriviNota } from "./lab/terminal.js";
+import { creaTerminale, adatta, pulisciTerminale, scriviNota, suOutput, UART } from "./lab/terminal.js";
 
 const $ = id => document.getElementById(id);
 let idCorrente = null;
@@ -82,14 +82,16 @@ $("btnPrec").onclick = () => salta(-1);
 $("btnSucc").onclick = () => salta(1);
 
 document.addEventListener("keydown", e => {
-    if (e.target.closest(".terminale") || !$("velo").hidden) return;
+    // `.host`, non `.terminale`: i riquadri delle macchine sono due e si chiamano
+    // cosi'. Sbagliare il selettore qui significa che la freccia destra premuta
+    // dentro `vi` cambia capitolo.
+    if (e.target.closest(".host") || !$("velo").hidden) return;
     if (e.key === "ArrowLeft") salta(-1);
     if (e.key === "ArrowRight") salta(1);
 });
 
 $("btnIndice").onclick = () => apriSommario(idCorrente, vaiA);
 $("btnIntro").onclick = () => apriIntro();
-$("btnQuaderno").onclick = apriQuaderno;
 
 onLangChange(() => { refreshStatic(); if (idCorrente) vaiA(idCorrente, false); });
 
@@ -113,8 +115,9 @@ $("btnReimposta").onclick = async () => {
     stato.textContent = "…";
     try {
         await reimposta();
-        pulisciTerminale();
-        scriviNota(t("labReimposta"), 79);
+        pulisciTerminale();                     // tutti e due
+        scriviNota(UART.pc, t("labReimposta"), 79);
+        scriviNota(UART.server, t("labReimposta"), 179);
         await riseminaEsercizioCorrente();
     } finally {
         btn.disabled = false; btn.textContent = testo;
@@ -153,7 +156,9 @@ async function riseminaEsercizioCorrente() {
 
     try {
         await avvia();
-        creaTerminale($("terminale"));
+        creaTerminale($("terminalePc"), UART.pc);
+        creaTerminale($("terminaleServer"), UART.server);
+        preparaBanco();
         await attendiAgente();
         macchinaPronta(true);
         await vaiA(idCorrente, false);   // ridisegna gli esercizi ora che la macchina c'e'
@@ -164,10 +169,88 @@ async function riseminaEsercizioCorrente() {
     }
 })();
 
-addEventListener("resize", () => adatta($("terminale")));
+// ------------------------------------------------------------------ il banco a due
+//
+// Tre cose, e sono tutte e tre "far vedere quello che sta succedendo":
+// quale macchina ha la tastiera, come si passa all'altra, e — su schermo stretto,
+// dove se ne vede una sola — che l'altra ha stampato qualcosa.
+
+function preparaBanco() {
+    const riquadri = { pc: $("hostPc"), server: $("hostServer") };
+    const uartDi = { pc: UART.pc, server: UART.server };
+    let mostrato = "pc";           // conta solo sotto i 760px
+
+    // 1. il fuoco: chi ha la tastiera si accende, l'altro si smorza.
+    for (const [nome, riquadro] of Object.entries(riquadri)) {
+        const dentro = riquadro.querySelector(".xterm-helper-textarea") || riquadro;
+        dentro.addEventListener("focus", () => segna(nome), true);
+        riquadro.addEventListener("mousedown", () => segna(nome));
+    }
+    function segna(nome) {
+        for (const [n, r] of Object.entries(riquadri)) r.classList.toggle("attivo", n === nome);
+    }
+
+    // 2. le schede, per lo schermo stretto
+    const schede = $("schede");
+    schede.onclick = e => {
+        const nome = e.target.closest(".scheda")?.dataset.host;
+        if (!nome) return;
+        mostra(nome);
+    };
+    function mostra(nome) {
+        mostrato = nome;
+        for (const [n, r] of Object.entries(riquadri)) r.classList.toggle("mostrato", n === nome);
+        schede.querySelectorAll(".scheda").forEach(b => {
+            b.classList.toggle("on", b.dataset.host === nome);
+            if (b.dataset.host === nome) b.querySelector(".pallino")?.setAttribute("hidden", "");
+        });
+        segna(nome);
+        // xterm deve rimisurarsi: era in un contenitore largo zero finche' era
+        // nascosto, e senza questo resta a 40 colonne finche' non si ridimensiona
+        // la finestra.
+        requestAnimationFrame(() => adatta(schermoDi(nome), uartDi[nome]));
+        terminaleDi(nome)?.focus();
+    }
+    const schermoDi = n => n === "pc" ? $("terminalePc") : $("terminaleServer");
+    const terminaleDi = n => riquadri[n].querySelector(".xterm-helper-textarea");
+    mostra("pc");
+
+    // 3. il pallino: se il server risponde mentre stai guardando il pc, si vede.
+    suOutput(UART.server, () => {
+        if (mostrato !== "server" && innerWidth <= 760) {
+            schede.querySelector('[data-host="server"] .pallino')?.removeAttribute("hidden");
+        }
+    });
+
+    // Il ridimensionamento va osservato per contenitore, non sulla finestra: aprire
+    // un esercizio o far comparire il verdetto cambia l'altezza dei terminali senza
+    // che la finestra si muova di un pixel, e il guest resterebbe convinto di avere
+    // le righe di prima.
+    //
+    // Ma si osservano i RIQUADRI (.host), non gli schermi: dentro lo schermo ci vive
+    // xterm, e ridimensionare xterm cambia lo schermo — che rimetterebbe in moto
+    // l'osservatore, all'infinito. Il riquadro esterno lo decide solo il layout.
+    if (window.ResizeObserver) {
+        let attesa;
+        const osservatore = new ResizeObserver(() => {
+            clearTimeout(attesa);
+            attesa = setTimeout(() => {
+                adatta($("terminalePc"), UART.pc);
+                adatta($("terminaleServer"), UART.server);
+            }, 200);
+        });
+        osservatore.observe($("hostPc"));
+        osservatore.observe($("hostServer"));
+    }
+}
+
+addEventListener("resize", () => {
+    adatta($("terminalePc"), UART.pc);
+    adatta($("terminaleServer"), UART.server);
+});
 
 // Gancio per i test end-to-end (tools/e2e.mjs). Non e' un'API pubblica.
 import * as agente from "./lab/agent.js";
 import * as runner from "./lab/runner.js";
 import * as termmod from "./lab/terminal.js";
-window.__linuxlab = { agente, runner, term: termmod, vaiA, capitolo, get stato() { return stato.textContent; } };
+window.__sshlab = { agente, runner, term: termmod, vaiA, capitolo, get stato() { return stato.textContent; } };

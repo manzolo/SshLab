@@ -59,7 +59,10 @@ function chiedi(op, ...arg) {
     return new Promise((res, rej) => {
         attesa.set(id, res);
         emulatore.serial_send_bytes(1, new TextEncoder().encode(`${id} ${op} ${arg.join(" ")}\n`));
-        setTimeout(() => { if (attesa.delete(id)) rej(new Error(`timeout su ${op}`)); }, 40000);
+        // 120 s, non 40: qui dentro un check puo' aprire una connessione SSH vera, e
+        // su una CPU emulata un handshake completo costa una decina di secondi. Il
+        // margine e' per le soluzioni che ne fanno piu' d'uno di fila.
+        setTimeout(() => { if (attesa.delete(id)) rej(new Error(`timeout su ${op}`)); }, 120000);
     });
 }
 const b64 = s => Buffer.from(s, "utf8").toString("base64");
@@ -121,13 +124,12 @@ async function provaEsercizio(cap, es) {
 
 // ---------------------------------------------------------------- via
 
-// I capitoli con runtime "local" (17-22) girano su Debian+systemd: qui non hanno
-// senso e li prova tests/labs-local.mjs. Saltarli non e' pigrizia, e' correttezza.
+// Qui gira tutto nel browser, comprese le due macchine: nessun capitolo da saltare.
 const { CAPITOLI } = await import(path.join(ROOT, "content/index.js"));
-const soloBrowser = new Set(CAPITOLI.filter(c => c.runtime !== "local").map(c => c.id));
+const dichiarati = new Set(CAPITOLI.map(c => c.id));
 const richiesti = process.argv.slice(2);
 const capitoli = (richiesti.length ? richiesti : fs.readdirSync(path.join(ROOT, "content"))
-    .filter(d => /^ch\d\d$/.test(d) && soloBrowser.has(d))).sort();
+    .filter(d => /^ch\d\d$/.test(d) && dichiarati.has(d))).sort();
 
 await new Promise(r => emulatore.add_listener("emulator-loaded", r));
 await dormi(2500);

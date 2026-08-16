@@ -1,8 +1,7 @@
 export default {
-    titolo: "Linux Lab",
-    sottotitolo: "imparare Linux con un terminale vero",
+    titolo: "SSH Lab",
+    sottotitolo: "imparare SSH con due macchine vere",
     navIntro: "Basi",
-    navQuaderno: "Quaderno",
     navIndice: "Capitoli",
     depthBase: "BASE",
     depthPro: "PRO",
@@ -17,12 +16,14 @@ export default {
 
     // laboratorio
     labTitolo: "Laboratorio",
+    hostRuoloPc: "il tuo computer",
+    hostRuoloServer: "la macchina remota",
     labScarico: "Scarico la macchina… {0}%",
-    labAvvio: "Avvio Linux…",
-    labPronta: "Macchina pronta",
+    labAvvio: "Avvio le due macchine…",
+    labPronta: "Macchine pronte",
     labErrore: "Immagine non compilata. Vedi lab/README.md: <code>make -C lab all</code>",
-    labReimposta: "Reimposta la macchina",
-    labReimpostaTitle: "Riporta la macchina allo stato iniziale. Usalo senza timore.",
+    labReimposta: "Reimposta le macchine",
+    labReimpostaTitle: "Riporta tutte e due le macchine allo stato iniziale. Usalo senza timore: è la rete di sicurezza.",
     labRicomincia: "Ricomincia l'esercizio",
     labNuovoMondo: "Nuovo mondo",
     labNuovoMondoTitle: "Stesso esercizio, numeri diversi. È il ripasso migliore che ci sia.",
@@ -67,15 +68,10 @@ export default {
     mostraOutput: "Mostra cosa è successo",
     passoSucc: "Passo successivo →",
 
-    // quaderno
-    quadernoTitolo: "Il tuo quaderno di bordo",
-    quadernoVuoto: "Ancora vuoto. Ogni comando che incontri risolvendo un esercizio finisce qui.",
-    quadernoEsporta: "Esporta in Markdown",
-    quadernoDa: "dal capitolo {0}",
 
     // varie
     chiudi: "Chiudi",
-    mobileAvviso: "Il terminale ha bisogno di una tastiera vera: da telefono puoi leggere tutto, ma per esercitarti torna dal computer.",
+    mobileAvviso: "I terminali vogliono una tastiera vera: da telefono puoi leggere tutto, ma per esercitarti torna dal computer.",
     introTitolo: "Da zero",
     introInizia: "Ho capito — al capitolo 1 →",
 };

@@ -46,14 +46,14 @@ for (const cap of capitoliCaricati.filter(c => !c.__errore)) {
     test(`${cap.id} — struttura`, () => {
         assert.ok(cap.title && cap.oneLiner, "servono title e oneLiner");
         assert.ok(Array.isArray(cap.blocks) && cap.blocks.length, "servono dei blocchi");
-        assert.ok(["browser", "local", "hybrid"].includes(cap.runtime), `runtime sconosciuto: ${cap.runtime}`);
         for (const b of cap.blocks) {
             assert.ok(BLOCCHI_NOTI.includes(b.kind), `${cap.id}: blocco sconosciuto "${b.kind}"`);
         }
-        // Un capitolo del browser senza il blocco lab non mostrerebbe il terminale.
-        if (cap.runtime !== "local") {
-            assert.ok(cap.blocks.some(b => b.kind === "lab"), `${cap.id}: manca il blocco lab`);
-        }
+        // Qui non c'e' il campo `runtime` del lab fratello: la' distingueva i capitoli
+        // da fare in un container sul proprio computer, qui gira tutto nel browser —
+        // due macchine comprese. Senza il blocco lab, pero', il capitolo non le
+        // mostrerebbe affatto.
+        assert.ok(cap.blocks.some(b => b.kind === "lab"), `${cap.id}: manca il blocco lab`);
     });
 
     test(`${cap.id} — bilingue completo`, () => {
