@@ -430,16 +430,17 @@ computer che non esistono più, e con accesso root.
 
 ## Fuori dai capitoli — la coda aperta
 
-- [ ] **Portare la correzione del `\r` su LinuxLab, che è ONLINE.** Un carattere in
-      `lab/overlay/opt/lab/bin/labagentd`: `tr -d '\000-\010\013-\037'`. Senza,
-      qualunque output con un `\r` dentro fa fallire una verifica con un ingannevole
-      «la verifica non ha risposto». Il difetto è ereditato da lì.
-- [ ] **Consegna:** `gh repo create manzolo/SshLab`, Pages, topic `edu-simulator`,
-      riga nel profilo `~/Workspaces/github/manzolo`.
+- [x] **Correzione del `\r` verificata in LinuxLab.** Il filtro introdotto da
+      `c30bc48` conserva soltanto TAB, newline e ASCII stampabile, quindi elimina gia'
+      il carriage return insieme agli altri controlli non ammessi nel JSON.
+- [x] **Consegna:** repository pubblico, Pages, topic `edu-simulator` e riga nel
+      profilo `~/Workspaces/github/manzolo`.
 - [x] **Screenshot del README** rigenerati con tutti e dodici i capitoli
       (`npm run screenshot`).
-- [ ] **Gemello:** scheda in `20_Progetti/ssh-lab.md` e una riga nel `Diario/2026-08.md`
+- [x] **Gemello:** scheda in `20_Progetti/ssh-lab.md` e una riga nel `Diario/2026-08.md`
       sul *perché* — l'unica parte non ricostruibile dai commit.
+- [ ] **Telefono reale:** verificare caricamento, schede PC/server, tastiera e memoria
+      disponibile. Un viewport Chrome stretto non sostituisce questa prova.
 
 ---
 

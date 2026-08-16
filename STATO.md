@@ -151,8 +151,8 @@ un pezzo**.
 Non è un caso di scuola: `ssh` stampa `Warning: Permanently added … \r\n` al primo
 incontro con un host, quindi **il primo `ssh` di ogni sessione era invisibile**.
 
-> ⚠️ **Il difetto è ereditato: c'è anche in LinuxLab, che è ONLINE.** Portarlo di là è
-> in coda al `BACKLOG.md`.
+LinuxLab lo elimina gia' con un filtro ancora piu' stretto: `_esc` conserva soltanto
+TAB, newline e ASCII stampabile (`c30bc48`). Il `\r` quindi non raggiunge il JSON.
 
 ### 5.3 · L'hostname non sta nel netns: sta nell'UTS
 
@@ -325,9 +325,8 @@ provati nella VM vera da `tests/infrastruttura.sh`.
 
 ### Manca
 
-- La correzione del `\r` (§5.2) da portare su **LinuxLab, che è online**.
-- La consegna: `gh repo create manzolo/SshLab`, Pages, topic `edu-simulator`.
-- La scheda e la riga di diario nel Gemello Digitale.
+- La prova su un telefono reale; il viewport stretto automatizzato non verifica tastiera,
+  touch e memoria del dispositivo.
 
 ### Materia prima per i capitoli
 

@@ -18,9 +18,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with: { node-version: '24' }
 
       # I test di struttura girano sempre: sono secondi, e un capitolo mal formato
@@ -30,7 +30,7 @@ jobs:
       # L'immagine si ricostruisce SOLO se cambia qualcosa che la riguarda.
       # Con i contenuti fuori dall'immagine, il caso normale e' cache hit: un push
       # di soli capitoli passa in un paio di minuti.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         id: cache-immagine
         with:
           path: images
@@ -46,7 +46,7 @@ jobs:
         if: steps.cache-immagine.outputs.cache-hit != 'true'
         run: make -C lab all
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with: { path: . }
 
   deploy:
@@ -57,4 +57,4 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
