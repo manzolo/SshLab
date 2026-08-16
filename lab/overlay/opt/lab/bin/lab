@@ -8,7 +8,7 @@
 set -u
 LIB=/opt/lab/lib/labcheck.sh
 STATE=/opt/lab/state
-LAB="${LAB:-/root/lab}"
+LAB="${LAB:-$HOME/lab}"
 mkdir -p "$STATE"
 
 uso() {

@@ -9,8 +9,15 @@
 // al primo capitolo e cache hit per tutti gli altri; e la macchina resta la STESSA passando
 // di capitolo in capitolo, cosi' i file creati al capitolo 3 esistono ancora al capitolo 5.
 //
-// NB: niente warm-up. Misurato: non riduce le letture 9p e senza drop_caches gonfia
-// lo stato del 40%. Resta solo `sync; drop_caches`.
+// Dentro lo snapshot ci sono gia': i due host con il loro cavo, sshd in ascolto, la
+// casualita' del kernel sbloccata e le pagine di ssh gia' lette dal disco. Sono tutte
+// cose che costano una volta qui e zero a chi studia — perche' lo snapshot salva la
+// RAM, e la RAM tiene sia i namespace sia la cache del filesystem.
+//
+// NB: il lab fratello dichiara "niente warm-up", misurato sul suo caso. Qui e' stato
+// rimisurato e il risultato e' opposto: senza scaldare ssh, il PRIMO login costa oltre
+// tre minuti contro gli otto secondi dei successivi. Le regole ereditate si
+// rimisurano, non si applicano a scatola chiusa. Il prezzo sono ~5 MB di snapshot.
 
 import path from "node:path";
 import fs from "node:fs";
@@ -76,28 +83,35 @@ emulator.add_listener("serial0-output-byte", (b) => {
         // ogni volta.
         fase = "crng";
         testo = "";
-        emulator.serial0_send("dd if=/dev/random of=/dev/null bs=32 count=1 2>/dev/null; " +
+        emulator.serial0_send("sudo dd if=/dev/random of=/dev/null bs=32 count=1 2>/dev/null; " +
                               "grep -q . /proc/sys/kernel/random/entropy_avail && echo CRNG-PRONTO\n");
         return;
     }
     if (fase === "crng") {
         console.log(`casualita' del kernel pronta a ${((Date.now() - t0) / 1000).toFixed(1)} s`);
-        // I due host nascono QUI, non all'apertura del lab: lo snapshot salva la RAM,
-        // quindi salva anche i namespace, il cavo, gli indirizzi e sshd in ascolto.
-        // Chi apre il lab li trova gia' in piedi, senza eseguire un comando.
+        // I due host li ha gia' costruiti init (`::sysinit:/opt/lab/bin/lab-hosts-up`,
+        // e le azioni sysinit girano tutte prima dei respawn, quindi prima ancora che
+        // esista questo prompt). Qui si controlla soltanto che ci siano: uno snapshot
+        // salvato con il mondo a meta' sarebbe un guasto che si presenta molto piu'
+        // avanti, addosso a chi studia, e senza nessun indizio.
         fase = "mondo";
         testo = "";
-        emulator.serial0_send("/opt/lab/bin/lab-hosts-up\n");
+        emulator.serial0_send("cat /run/lab/srv_ip; sudo ip netns list; pgrep -c sshd\n");
         return;
     }
     if (fase === "mondo") {
+        if (!/server/.test(testo)) {
+            console.error("\nERRORE: il mondo a due host non c'e'. Guarda /opt/lab/bin/lab-hosts-up");
+            console.error(testo.slice(-400));
+            process.exit(1);
+        }
         console.log(`due host in piedi a ${((Date.now() - t0) / 1000).toFixed(1)} s`);
         // E qui si paga, una volta per tutte, il primo `ssh`: misurato, a freddo
         // costa piu' di tre minuti (sono i binari letti dal 9p, non la crittografia),
         // a caldo sette secondi. Scaldandolo adesso, quel conto non lo paga nessuno.
         fase = "scalda";
         testo = "";
-        emulator.serial0_send("/opt/lab/bin/lab-scalda-ssh\n");
+        emulator.serial0_send("sudo /opt/lab/bin/lab-scalda-ssh\n");
         return;
     }
     if (fase === "scalda") {

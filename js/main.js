@@ -160,6 +160,7 @@ async function riseminaEsercizioCorrente() {
         creaTerminale($("terminaleServer"), UART.server);
         preparaBanco();
         await attendiAgente();
+        await aggiornaIndirizzi();
         macchinaPronta(true);
         await vaiA(idCorrente, false);   // ridisegna gli esercizi ora che la macchina c'e'
     } catch (e) {
@@ -174,6 +175,19 @@ async function riseminaEsercizioCorrente() {
 // Tre cose, e sono tutte e tre "far vedere quello che sta succedendo":
 // quale macchina ha la tastiera, come si passa all'altra, e — su schermo stretto,
 // dove se ne vede una sola — che l'altra ha stampato qualcosa.
+
+/** Gli indirizzi si CHIEDONO alla macchina: cambiano a ogni mondo, e un'etichetta
+ *  ferma sarebbe una bugia a video proprio nel lab che insegna a non fidarsi delle
+ *  etichette. Si aggiorna dopo ogni seed, non solo all'avvio. */
+export async function aggiornaIndirizzi() {
+    try {
+        const { shell } = await import("./lab/agent.js");
+        const pc  = (await shell("cat /run/lab/pc_ip")).out?.trim();
+        const srv = (await shell("cat /run/lab/srv_ip")).out?.trim();
+        if (pc)  $("ipPc").textContent = pc;
+        if (srv) $("ipServer").textContent = srv;
+    } catch { /* se la macchina non risponde, restano i puntini: meglio di un numero falso */ }
+}
 
 function preparaBanco() {
     const riquadri = { pc: $("hostPc"), server: $("hostServer") };

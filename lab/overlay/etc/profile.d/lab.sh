@@ -5,8 +5,16 @@ export PAGER=less
 export MANPAGER=less
 export EDITOR=vi
 export LESS="-R"
-# Un prompt che dice sempre dove sei: e' meta' del capitolo 02.
-export PS1='\[\e[38;5;79m\]\w\[\e[0m\] $ '
+# Il prompt dice CHI SEI e SU QUALE MACCHINA, oltre a dove.
+#
+# In un lab a due host non e' un vezzo: e' l'unico segnale che resta vero quando
+# fai `ssh` dal terminale di sinistra e ti ritrovi sul server. La finestra e'
+# sempre quella, il colore del riquadro pure — cambia solo il prompt. Chi non ci
+# fa caso finisce per cancellare file sulla macchina sbagliata.
+#
+# Il colore segue la macchina: ciano il pc, ambra il server, come i riquadri.
+if [ "$(hostname 2>/dev/null)" = "server" ]; then _lab_col=179; else _lab_col=79; fi
+export PS1='\[\e[38;5;'"$_lab_col"'m\]\u@\h\[\e[0m\]:\[\e[38;5;245m\]\w\[\e[0m\]\$ '
 [ -d "$LAB" ] || mkdir -p "$LAB" 2>/dev/null
 cd "$LAB" 2>/dev/null || true
 

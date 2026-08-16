@@ -41,20 +41,15 @@ if ! ip netns list 2>/dev/null | grep -q '^server'; then
 fi
 
 # --- i due utenti -------------------------------------------------------------
-# Il punto meno ovvio di tutta l'architettura: due namespace di RETE non sono due
-# filesystem. Se il pc e il server fossero lo stesso utente, ~/.ssh sarebbe LO
-# STESSO FILE, e "copiare la chiave sul server" non vorrebbe dire niente. Due
-# utenti con due HOME distinte rendono vero l'unico pezzo che deve esserlo.
+# Li crea il Dockerfile, a build time: qui resta solo la rete di sicurezza, perche'
+# senza di loro non parte niente e un errore muto costerebbe un'ora.
+#
+# (Il punto meno ovvio di tutta l'architettura, e il motivo per cui gli utenti sono
+# due: due namespace di RETE non sono due filesystem. Se il pc e il server fossero
+# lo stesso utente, ~/.ssh sarebbe LO STESSO FILE e "copiare la chiave sul server"
+# non vorrebbe dire niente.)
 for u in "$UTENTE_PC" "$UTENTE_SRV"; do
-    id "$u" >/dev/null 2>&1 || adduser -D -s /bin/bash "$u"
-    # ATTENZIONE, costato mezza serata: `adduser -D` lascia la password BLOCCATA
-    # (`!` in /etc/shadow), e OpenSSH tratta un account bloccato come un utente
-    # CHE NON ESISTE — anche entrando con la chiave, dove la password non c'entra
-    # niente. Lato client si vede solo `Permission denied (publickey)`, identico a
-    # una chiave sbagliata; la causa vera si legge solo nel log del server
-    # (`userauth_pubkey: disabled because of invalid user`).
-    passwd -u "$u" >/dev/null 2>&1 || true
-    echo "$u:lab" | chpasswd >/dev/null 2>&1 || true
+    id "$u" >/dev/null 2>&1 || { echo "lab-hosts-up: manca l'utente $u"; exit 1; }
 done
 
 # --- la chiave di identita' del server ----------------------------------------

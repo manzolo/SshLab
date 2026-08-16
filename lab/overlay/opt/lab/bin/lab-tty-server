@@ -1,0 +1,35 @@
+#!/bin/sh
+# lab-tty-server — la shell del secondo host, attaccata a ttyS2.
+#
+# Tre cose, e ognuna serve a rendere vera una promessa del capitolo 1:
+#
+#   1. `nsenter --net`  → questa shell vive nella pila di rete del server, quindi
+#      `ip addr` mostra 10.10.x.2 e `ssh` verso il pc esce dal lato giusto del cavo.
+#   2. `unshare --uts` + `hostname server` → `hostname` risponde `server` e il
+#      prompt dice `deploy@server`. L'hostname e' per-namespace: cambiandolo qui
+#      non si tocca il pc. Senza questo, entrambi i terminali direbbero
+#      `root@localhost` e il lab racconterebbe una bugia alla prima riga.
+#   3. `agetty --autologin deploy` → si e' un UTENTE DIVERSO, e questa e' la parte
+#      che regge tutto il corso: siccome i due host condividono il disco, HOME
+#      diverse sono l'unico modo perche' `~/.ssh` sia davvero un altro file di la'.
+#      Senza, "copiare la chiave sul server" non vorrebbe dire niente.
+#
+# E si usa `agetty`, non una redirezione `sh </dev/ttyS2`: agetty fa setsid e
+# TIOCSCTTY, quindi la shell ha un terminale di controllo vero — job control,
+# Ctrl-C, Ctrl-Z, `stty`. Con una redirezione nuda te ne accorgi al primo Ctrl-C
+# dentro un `ssh` appeso, che e' il momento peggiore.
+
+# Il mondo lo prepara lab-hosts-up, che init lancia prima di questo (le azioni
+# sysinit girano tutte prima dei respawn). Se pero' qualcosa e' andato storto,
+# meglio aspettare che entrare in un namespace che non c'e': senza questa attesa
+# BusyBox init vedrebbe il getty morire subito e lo metterebbe in "respawning too
+# fast" per cinque minuti — cioe' lo snapshot verrebbe salvato con ttyS2 morto.
+i=0
+while [ ! -e /var/run/netns/server ] && [ $i -lt 60 ]; do
+    sleep 1
+    i=$((i + 1))
+done
+
+exec nsenter --net=/var/run/netns/server -- \
+     unshare --uts -- \
+     sh -c 'hostname server; exec /sbin/agetty --autologin deploy -s ttyS2 115200 vt100'

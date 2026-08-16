@@ -120,7 +120,13 @@ async function apri(cap, es, box) {
 
     // Prepara il mondo dell'esercizio nella macchina.
     const prepara = async (seme) => {
-        try { await preparaEsercizio(cap.id, es.id, seme); }
+        try {
+            await preparaEsercizio(cap.id, es.id, seme);
+            // Il seed puo' aver rimescolato la rete: le etichette dei due riquadri
+            // devono seguirlo, o mostrerebbero l'indirizzo del mondo di prima.
+            const { aggiornaIndirizzi } = await import("../main.js");
+            await aggiornaIndirizzi();
+        }
         catch (e) { zona.replaceChildren(el("div", "controllo fail", e.message)); }
     };
     btnVer.onclick = async () => {

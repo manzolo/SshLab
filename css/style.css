@@ -100,7 +100,14 @@ a { color: var(--phosphor); }
    ha ~88. */
 #impaginato {
     flex: 1; min-height: 0;
-    display: grid; grid-template-rows: minmax(0, 1fr) auto;
+    display: grid;
+    /* La colonna va vincolata esplicitamente. Senza, la traccia implicita e' `auto`
+       e in una griglia `auto` cresce fino al contenuto piu' largo: xterm chiedeva le
+       sue 80 colonne, la griglia gliele dava, e la pagina finiva larga il doppio
+       della finestra con la barra di scorrimento orizzontale. `minmax(0, 1fr)` dice
+       che comanda la finestra. */
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
 }
 
 .capitolo {
@@ -206,10 +213,15 @@ body.pro .probox { display: block; }
    Per questo il laboratorio qui prende tutta la larghezza della pagina, invece di
    stare in una colonna stretta come nel lab fratello. */
 
-.banco { display: flex; min-height: 0; flex: 0 0 auto; }
+.banco { display: flex; min-height: 0; flex: 0 0 auto; width: 100%; overflow: hidden; }
 
 .host {
-    flex: 1 1 50%; min-width: 0;
+    /* `flex: 1 1 0` e non `1 1 50%`: xterm disegna una griglia con una larghezza
+       PROPRIA (80 colonne finche' nessuno gli dice altro), e con una base del 50%
+       quella larghezza spingeva i due riquadri oltre la finestra — pagina larga il
+       doppio e barra di scorrimento orizzontale. Con base 0 e min-width 0 comanda
+       il contenitore, e xterm si adatta a lui invece del contrario. */
+    flex: 1 1 0; min-width: 0; overflow: hidden;
     display: flex; flex-direction: column;
     border-right: 1px solid var(--panel-edge);
     /* Quale sto guidando: il riquadro senza fuoco si smorza. Lo stato invisibile
@@ -242,7 +254,10 @@ body.pro .probox { display: block; }
 .host-pc.attivo    { box-shadow: inset 0 2px 0 var(--phosphor); }
 .host-server.attivo { box-shadow: inset 0 2px 0 var(--amber); }
 
-.host-schermo { background: var(--screen); padding: 6px 4px 6px 8px; height: 300px; }
+.host-schermo {
+    background: var(--screen); padding: 6px 4px 6px 8px; height: 300px;
+    min-width: 0; overflow: hidden;      /* vedi la nota su .host */
+}
 .host-schermo .xterm { height: 100%; }
 
 /* le schede: servono solo su schermo stretto */

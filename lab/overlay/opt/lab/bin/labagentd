@@ -13,7 +13,11 @@
 DEV=/dev/ttyS1
 LIB=/opt/lab/lib/labcheck.sh
 STATE=/opt/lab/state
-LAB=/root/lab
+# L'area di lavoro e' quella dell'utente del pc, non di root: da qui in poi chi
+# studia e' `andrea`, e un esercizio seminato in /root/lab sarebbe invisibile a lui
+# — e illeggibile, visto che /root non e' suo.
+UTENTE_PC=andrea
+LAB=/home/$UTENTE_PC/lab
 
 mkdir -p "$STATE"
 stty -F "$DEV" 115200 raw -echo 2>/dev/null
@@ -52,7 +56,7 @@ run_lab() { # run_lab <script>
     # HOME va impostato esplicitamente: labagentd nasce da init e non lo eredita.
     # Senza, uno script dell'utente che scrive in ~/lab finisce in /lab e fallisce
     # solo durante la verifica — un modo perfetto per impazzire.
-    HOME=/root EDU_SEED="$(cat "$STATE/seed" 2>/dev/null || echo 1)" LAB="$LAB" \
+    HOME=/home/$UTENTE_PC EDU_SEED="$(cat "$STATE/seed" 2>/dev/null || echo 1)" LAB="$LAB" \
         sh -c ". $LIB; . '$1'" 2>&1
 }
 
@@ -83,7 +87,15 @@ while IFS= read -r line; do
             # valori memorizzati dal seed, tutto. Resta solo il seme, che scriviamo ora.
             find "$STATE" -maxdepth 1 -type f ! -name current -delete 2>/dev/null
             printf '%s' "$2" > "$STATE/seed"
-            out=$(run_lab "/opt/lab/$1/seed.sh"); reply "$id" $? "$out"
+            out=$(run_lab "/opt/lab/$1/seed.sh")
+            rc=$?
+            # Il seed gira come root, ma l'area di lavoro e' di `andrea`: senza
+            # questo, chi studia si trova una cartella sua piena di file di root e
+            # non ci puo' scrivere. Il messaggio sarebbe "Permission denied" su un
+            # file appena comparso a casa propria — il tipo di guasto che fa dubitare
+            # di aver capito male l'esercizio.
+            chown -R "$UTENTE_PC:$UTENTE_PC" "$LAB" 2>/dev/null
+            reply "$id" $rc "$out"
             ;;
         # check <dir> : verifica
         check)
@@ -105,7 +117,7 @@ while IFS= read -r line; do
             rc=$?; chmod "$m" "$p" 2>/dev/null; reply "$id" $rc ""
             ;;
         sh)
-            out=$(cd "$LAB" 2>/dev/null; HOME=/root sh -c "$*" 2>&1); reply "$id" $? "$out"
+            out=$(cd "$LAB" 2>/dev/null; HOME=/home/$UTENTE_PC sh -c "$*" 2>&1); reply "$id" $? "$out"
             ;;
         *)
             reply "$id" 127 "operazione sconosciuta: $op"
