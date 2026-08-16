@@ -1,0 +1,114 @@
+#!/bin/sh
+# labagentd — canale di verifica su /dev/ttyS1.
+#
+# Perche' una seconda seriale e non comandi iniettati nel terminale visibile:
+# se l'utente e' dentro `less`, `vi` o `top`, un comando iniettato finisce nel
+# buffer dell'editor e gli distrugge il lavoro. Qui il terminale dell'utente
+# (ttyS0) non viene MAI toccato.
+#
+# Protocollo asimmetrico:
+#   host -> guest   "<id> <op> [arg ...]"     (token separati da spazio: parsare JSON in ash e' masochismo)
+#   guest -> host   una riga JSON             (printf lo produce facile, JS lo legge gratis)
+
+DEV=/dev/ttyS1
+LIB=/opt/lab/lib/labcheck.sh
+STATE=/opt/lab/state
+LAB=/root/lab
+
+mkdir -p "$STATE"
+stty -F "$DEV" 115200 raw -echo 2>/dev/null
+
+# escaping JSON: barre, virgolette, caratteri di controllo, a capo; poi tronca
+#
+# L'intervallo era `\000-\010\013\014\016-\037`, che salta il \015 — il RITORNO A
+# CAPO. Un \r grezzo dentro una stringa JSON la rende illegale: dall'altra parte
+# JSON.parse fallisce, la risposta viene scartata e il comando sembra non tornare
+# MAI. Si presenta come "la verifica non ha risposto", cioe' come un guasto della
+# macchina, mentre il comando era finito da un pezzo.
+#
+# Non e' un caso di scuola: `ssh` stampa "Warning: Permanently added ... to the
+# list of known hosts.\r\n" al primo incontro con un host. Con l'intervallo
+# vecchio, il primo `ssh` di ogni sessione era invisibile al canale di verifica.
+# (Trovato il 2026-08-16 misurando: il comando durava 8,6 s, l'attesa 250.)
+#
+# Ora l'intervallo e' \000-\010 e \013-\037: restano solo \011 (tab) e \012 (LF),
+# e il LF diventa \n nel passaggio dopo.
+_esc() {
+    sed -e 's/\\/\\\\/g' -e 's/"/\\"/g' \
+        | tr -d '\000-\010\013-\037' \
+        | sed -e ':a' -e 'N' -e '$!ba' -e 's/\n/\\n/g' \
+        | cut -c1-4096
+}
+
+reply() { # reply <id> <code> <out>
+    printf '{"id":%s,"ok":%s,"code":%s,"out":"%s"}\n' \
+        "$1" "$([ "$2" -eq 0 ] && echo true || echo false)" "$2" \
+        "$(printf '%s' "$3" | _esc)" > "$DEV"
+}
+
+# esegue uno script del laboratorio con l'ambiente giusto
+run_lab() { # run_lab <script>
+    [ -f "$1" ] || { echo "script assente: $1"; return 127; }
+    # HOME va impostato esplicitamente: labagentd nasce da init e non lo eredita.
+    # Senza, uno script dell'utente che scrive in ~/lab finisce in /lab e fallisce
+    # solo durante la verifica — un modo perfetto per impazzire.
+    HOME=/root EDU_SEED="$(cat "$STATE/seed" 2>/dev/null || echo 1)" LAB="$LAB" \
+        sh -c ". $LIB; . '$1'" 2>&1
+}
+
+printf '{"ev":"ready","v":1}\n' > "$DEV"
+
+while IFS= read -r line; do
+    [ -z "$line" ] && continue
+    # shellcheck disable=SC2086
+    set -- $line
+    id=$1; op=$2; shift 2
+    case "$op" in
+        ping)
+            reply "$id" 0 "pong"
+            ;;
+        # seed <dir> <seme> : prepara il mondo dell'esercizio.
+        # L'area di lavoro si azzera SEMPRE prima del seed: altrimenti i resti
+        # dell'esercizio (o del seme) precedente falsano la verifica, e un trucco
+        # puo' passare grazie a un file rimasto li' per sbaglio.
+        seed)
+            # NON `rm -rf "$LAB"`: se la shell dell'utente e' dentro quella cartella,
+            # cancellarla lo lascia in una directory che non esiste piu' e ogni `ls`
+            # risponde "cannot open directory '.'". (E' proprio il fenomeno che il
+            # capitolo 2 spiega nella parte PRO — sarebbe grottesco causarlo noi.)
+            # Si svuota il contenuto e si tiene l'inode.
+            mkdir -p "$LAB" "$STATE"
+            find "$LAB" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null
+            # via ogni traccia dell'esercizio precedente: risposte consegnate,
+            # valori memorizzati dal seed, tutto. Resta solo il seme, che scriviamo ora.
+            find "$STATE" -maxdepth 1 -type f ! -name current -delete 2>/dev/null
+            printf '%s' "$2" > "$STATE/seed"
+            out=$(run_lab "/opt/lab/$1/seed.sh"); reply "$id" $? "$out"
+            ;;
+        # check <dir> : verifica
+        check)
+            out=$(run_lab "/opt/lab/$1/check.sh"); reply "$id" $? "$out"
+            ;;
+        # solve <dir> : soluzione di riferimento (solo per i test, mai dalla UI)
+        solve)
+            out=$(run_lab "/opt/lab/$1/solution.sh"); reply "$id" $? "$out"
+            ;;
+        # reset <dir> : ricomincia da capo con lo STESSO seme
+        reset)
+            mkdir -p "$LAB"; find "$LAB" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null
+            rm -f "$STATE/answer"
+            out=$(run_lab "/opt/lab/$1/seed.sh"); reply "$id" $? "$out"
+            ;;
+        write)
+            p=$1; m=$2; mkdir -p "$(dirname "$p")"
+            printf '%s' "$3" | base64 -d > "$p" 2>/dev/null
+            rc=$?; chmod "$m" "$p" 2>/dev/null; reply "$id" $rc ""
+            ;;
+        sh)
+            out=$(cd "$LAB" 2>/dev/null; HOME=/root sh -c "$*" 2>&1); reply "$id" $? "$out"
+            ;;
+        *)
+            reply "$id" 127 "operazione sconosciuta: $op"
+            ;;
+    esac
+done < "$DEV"

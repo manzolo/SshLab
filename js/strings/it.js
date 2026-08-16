@@ -1,0 +1,81 @@
+export default {
+    titolo: "Linux Lab",
+    sottotitolo: "imparare Linux con un terminale vero",
+    navIntro: "Basi",
+    navQuaderno: "Quaderno",
+    navIndice: "Capitoli",
+    depthBase: "BASE",
+    depthPro: "PRO",
+    depthTitle: "PRO aggiunge il come funziona sotto e cosa si rompe",
+
+    capPrec: "← Precedente",
+    capSucc: "Successivo →",
+    capDi: "Capitolo {0} di {1}",
+    inLavorazione: "in lavorazione",
+    prerequisito: "Questo capitolo dà per scontato il capitolo {0}. Se non ti dice niente, fai prima quello.",
+    vaiA: "vai",
+
+    // laboratorio
+    labTitolo: "Laboratorio",
+    labScarico: "Scarico la macchina… {0}%",
+    labAvvio: "Avvio Linux…",
+    labPronta: "Macchina pronta",
+    labErrore: "Immagine non compilata. Vedi lab/README.md: <code>make -C lab all</code>",
+    labReimposta: "Reimposta la macchina",
+    labReimpostaTitle: "Riporta la macchina allo stato iniziale. Usalo senza timore.",
+    labRicomincia: "Ricomincia l'esercizio",
+    labNuovoMondo: "Nuovo mondo",
+    labNuovoMondoTitle: "Stesso esercizio, numeri diversi. È il ripasso migliore che ci sia.",
+    labApri: "Apri il terminale",
+    labChiudi: "Chiudi",
+
+    // esercizi
+    tipoStato: "stato",
+    tipoRisposta: "risposta",
+    tipoMetodo: "metodo",
+    esercizi: "Esercizi",
+    esercizio: "Esercizio {0}",
+    verifica: "Verifica",
+    verificaInCorso: "Verifico…",
+    superato: "Superato",
+    nonAncora: "Non ancora",
+    suggerimento: "Suggerimento",
+    suggerimentoAltro: "Un altro suggerimento",
+    soluzione: "Mostra la soluzione",
+    cosaHaVisto: "Cosa ha visto la macchina",
+    perche: "Perché",
+    provaQuesto: "Prova a guardare così",
+    solPro: "PRO",
+    checkPro: "richiesto solo in PRO",
+    erroreVerifica: "La verifica non ha risposto. Riprova, o reimposta la macchina.",
+
+    // blocchi
+    bloccoTrappole: "Dove sbagliano tutti",
+    bloccoRecap: "Riepilogo",
+    bloccoPro: "Sotto il cofano",
+    recapComando: "Comando",
+    recapCosa: "A cosa serve",
+    recapOpzione: "L'opzione che userai davvero",
+
+    // capitoli locali
+    localeTitolo: "Questo capitolo si fa sul tuo computer",
+    localeCopia: "Copia il comando",
+    localeCopiato: "Copiato",
+    predizione: "Prima di guardare: cosa succede?",
+    predizioneGiusta: "Esatto.",
+    predizioneSbagliata: "Non proprio.",
+    mostraOutput: "Mostra cosa è successo",
+    passoSucc: "Passo successivo →",
+
+    // quaderno
+    quadernoTitolo: "Il tuo quaderno di bordo",
+    quadernoVuoto: "Ancora vuoto. Ogni comando che incontri risolvendo un esercizio finisce qui.",
+    quadernoEsporta: "Esporta in Markdown",
+    quadernoDa: "dal capitolo {0}",
+
+    // varie
+    chiudi: "Chiudi",
+    mobileAvviso: "Il terminale ha bisogno di una tastiera vera: da telefono puoi leggere tutto, ma per esercitarti torna dal computer.",
+    introTitolo: "Da zero",
+    introInizia: "Ho capito — al capitolo 1 →",
+};

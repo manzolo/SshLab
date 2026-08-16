@@ -1,0 +1,33 @@
+# Pacchetti dell'immagine ospite. Una riga per gruppo, i commenti si ignorano.
+# Regola: qui dentro deve esserci il Linux VERO, non BusyBox.
+
+# --- base di sistema (da tools/docker/alpine di copy/v86) ---
+alpine-base openrc agetty alpine-conf linux-virt linux-firmware-none
+
+# --- il cuore GNU: senza questi si insegnerebbe BusyBox ---
+bash coreutils findutils grep sed gawk diffutils
+
+# --- amministrazione: processi, dischi, archivi ---
+util-linux procps-ng psmisc file tar gzip xz less
+
+# --- editor ed esplorazione ---
+vim nano tree ncurses-terminfo-base
+
+# --- manuali. ATTENZIONE: su Alpine sono sottopacchetti -doc separati.
+#     Senza questi `man ls` non esiste e il capitolo 01 muore.
+mandoc mandoc-apropos man-pages
+coreutils-doc findutils-doc grep-doc sed-doc gawk-doc
+util-linux-doc procps-ng-doc bash-doc less-doc
+
+# --- utenti, permessi, testo strutturato ---
+shadow sudo acl attr jq bc
+
+# --- rete e dischi. Qui la rete NON e' finta: due network namespace collegati da
+#     una coppia veth sono due host veri, e iproute2 e' lo strumento che li crea.
+iproute2 curl e2fsprogs busybox-extras
+
+# --- il motivo per cui questo lab esiste: SSH vero, dei due lati del cavo.
+#     ATTENZIONE: su Alpine `ssh-keygen` sta in un pacchetto a se'. Senza, non c'e'
+#     ne' una coppia di chiavi da generare ne' un'impronta da leggere — cioe' meta'
+#     del corso. openssh-sftp-server serve a scp/sftp del capstone.
+openssh-client openssh-server openssh-keygen openssh-sftp-server

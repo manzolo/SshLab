@@ -1,0 +1,64 @@
+# EDU-LINUX · Linux Lab — sistema ospite del browser.
+#
+# v86 emula x86 a 32 bit: Debian e Ubuntu moderni non sono un'opzione (i386 abbandonato),
+# Alpine x86 si'. Alpine nasce con BusyBox e musl, quindi i comandi GNU veri si installano
+# esplicitamente (packages.txt) — altrimenti si insegnerebbe un `ls` con meta' delle opzioni.
+#
+# Pinnata a 3.21.0: e' la versione usata da tools/docker/alpine di copy/v86 ed e' quella
+# su cui lo spike ha dato numeri buoni. Alzarla e' possibile ma va rimisurato il 9p.
+FROM docker.io/i386/alpine:3.21.0
+
+ENV KERNEL=virt
+
+COPY packages.txt /tmp/packages.txt
+RUN apk add --no-cache $(grep -v '^#' /tmp/packages.txt | tr '\n' ' ') && rm /tmp/packages.txt
+
+# Console dell'utente su ttyS0. NESSUN getty su ttyS1: e' il canale di verifica,
+# e deve restare pulito da messaggi del kernel e da login.
+RUN sed -i 's/getty 38400 tty1/agetty --autologin root tty1 linux/' /etc/inittab && \
+    echo 'ttyS0::respawn:/sbin/agetty --autologin root -s ttyS0 115200 vt100' >> /etc/inittab && \
+    echo 'ttyS1::respawn:/opt/lab/bin/labagentd' >> /etc/inittab && \
+    echo 'ttyS2::respawn:/sbin/agetty --autologin root -s ttyS2 115200 vt100' >> /etc/inittab && \
+    echo '::sysinit:/sbin/ip link set lo up' >> /etc/inittab && \
+    echo '::sysinit:/sbin/syslogd -O /var/log/messages' >> /etc/inittab && \
+    sed -i 's/^root:[^:]*:/root::/' /etc/shadow && \
+    setup-hostname linuxlab
+
+# La shell di lavoro e' bash, non la ash di BusyBox: e' quella che si trova al lavoro,
+# e senza di lei PROMPT_COMMAND non esiste (serve a riportare a casa la shell quando
+# l'esercizio cambia e il mondo precedente viene svuotato).
+#
+# NB: si usa `usermod`, non una sed sul formato della riga. La sed che c'era qui
+# cercava `/bin/ash` mentre Alpine scrive `/bin/sh`: non matchava, falliva in
+# silenzio, e il capitolo 16 dichiarava una cosa falsa. L'`|| exit 1` finale fa
+# fallire la build invece di lasciarlo succedere di nuovo.
+RUN usermod -s /bin/bash root && \
+    getent passwd root | grep -q ':/bin/bash$' || { echo "la shell di root non e' bash"; exit 1; }
+
+# Capitolo 12 — il gestore di pacchetti deve funzionare DAVVERO, ma in v86 non c'e' rete.
+# Soluzione onesta: un magazzino locale su disco con qualche pacchetto vero e le sue
+# dipendenze. `apk add htop` installa sul serio, offline. Il capitolo dice come stanno
+# le cose: su una macchina vera il magazzino sta in rete, il resto e' identico.
+# Nessun `|| true` qui: se il magazzino non si costruisce, il capitolo 12 mente, e
+# preferisco che la build fallisca. (Serve `apk update` prima: `apk add --no-cache`
+# non lascia l'indice sul disco, e senza indice `apk fetch` non trova niente.)
+# Il repository va nella sottocartella dell'architettura: apk cerca <repo>/<arch>/APKINDEX.
+RUN apk update && \
+    ARCH="$(apk --print-arch)" && mkdir -p "/opt/repo/$ARCH" && \
+    apk fetch --recursive --output "/opt/repo/$ARCH" htop ncdu figlet && \
+    apk index -o "/opt/repo/$ARCH/APKINDEX.tar.gz" "/opt/repo/$ARCH"/*.apk && \
+    printf '/opt/repo\n' > /etc/apk/repositories && \
+    apk update --allow-untrusted && \
+    apk list --available 2>/dev/null | head -3
+
+COPY overlay/ /
+RUN chmod +x /opt/lab/bin/*
+
+# Senza questo `apropos` e `man -k` non funzionano: e' materiale del capitolo 01.
+RUN makewhatis /usr/share/man 2>/dev/null || true
+
+RUN for i in devfs dmesg mdev hwdrivers; do rc-update add $i sysinit; done && \
+    for i in hwclock modules sysctl hostname bootmisc; do rc-update add $i boot; done && \
+    rc-update add killprocs shutdown
+
+RUN mkinitfs -F "base virtio 9p" $(cat /usr/share/kernel/$KERNEL/kernel.release)

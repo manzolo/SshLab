@@ -1,0 +1,2 @@
+fs2json.py e copy-to-sha256.py provengono da copy/v86 (BSD-2), tools/.
+Vedi ../LICENSE.

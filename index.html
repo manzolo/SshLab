@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EDU-LINUX · Linux Lab</title>
+<meta name="description" content="Imparare Linux da zero con capitoli e un terminale vero nel browser: kernel Linux reale, nessuna installazione, nessun account.">
+<link rel="stylesheet" href="vendor/xterm/xterm.css">
+<link rel="stylesheet" href="css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='5' fill='%2306141a'/><text x='5' y='23' font-family='monospace' font-size='18' fill='%235ad7e6'>&gt;_</text></svg>">
+</head>
+<body>
+
+<header class="barra">
+  <div class="marchio">
+    <span class="sigla">EDU-LINUX</span>
+    <span class="nome" data-i18n="titolo">Linux Lab</span>
+    <span class="claim" data-i18n="sottotitolo"></span>
+  </div>
+  <nav class="azioni">
+    <button id="btnIndice" class="btn" data-i18n="navIndice"></button>
+    <button id="btnIntro"  class="btn" data-i18n="navIntro"></button>
+    <button id="btnQuaderno" class="btn" data-i18n="navQuaderno"></button>
+    <div class="switch" id="switchDepth" data-i18n-title="depthTitle">
+      <button data-depth="base" class="on" data-i18n="depthBase"></button>
+      <button data-depth="pro"  data-i18n="depthPro"></button>
+    </div>
+    <div class="switch" id="switchLang">
+      <button data-lang="it">IT</button>
+      <button data-lang="en">EN</button>
+    </div>
+  </nav>
+</header>
+
+<div class="progresso"><div id="barraProgresso"></div></div>
+
+<main id="impaginato">
+  <article id="capitolo" class="capitolo"></article>
+  <aside id="pannelloLab" class="lab">
+    <div class="lab-testa">
+      <span class="lab-titolo" data-i18n="labTitolo"></span>
+      <span id="labStato" class="lab-stato"></span>
+      <span class="spazio"></span>
+      <button id="btnNuovoMondo" class="btn mini" data-i18n="labNuovoMondo" data-i18n-title="labNuovoMondoTitle"></button>
+      <button id="btnRicomincia" class="btn mini" data-i18n="labRicomincia"></button>
+      <button id="btnReimposta"  class="btn mini" data-i18n="labReimposta" data-i18n-title="labReimpostaTitle"></button>
+    </div>
+    <div id="terminale" class="terminale"></div>
+    <div id="esercizi" class="esercizi"></div>
+  </aside>
+</main>
+
+<footer class="piede">
+  <button id="btnPrec" class="btn" data-i18n="capPrec"></button>
+  <span id="etichettaCap" class="etichetta"></span>
+  <button id="btnSucc" class="btn" data-i18n="capSucc"></button>
+</footer>
+
+<div id="velo" class="velo" hidden><div id="veloBox" class="velo-box"></div></div>
+
+<script src="vendor/xterm/xterm.js"></script>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

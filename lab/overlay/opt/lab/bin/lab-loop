@@ -1,0 +1,24 @@
+#!/bin/sh
+# lab-loop FILE [MB] — trasforma un file in un disco, anche dove manca udev.
+#
+# In un container non gira udev: `losetup -f` sceglie un numero libero ma il nodo
+# in /dev non viene creato da nessuno, e losetup fallisce con
+# "device node /dev/loopN is lost. You may use mknod(1) to recover it".
+# Qui il nodo lo creiamo noi. Stampa il device, come `losetup -f --show`.
+set -eu
+file=$1; mb=${2:-100}
+modprobe loop 2>/dev/null || true
+[ -f "$file" ] || dd if=/dev/zero of="$file" bs=1M count="$mb" 2>/dev/null
+
+# gia' agganciato?
+gia=$(losetup -a 2>/dev/null | grep -F "($file)" | cut -d: -f1 | head -1)
+[ -n "$gia" ] && { echo "$gia"; exit 0; }
+
+n=0
+while [ $n -lt 256 ]; do
+    d="/dev/loop$n"
+    [ -e "$d" ] || mknod "$d" b 7 "$n" 2>/dev/null || true
+    if losetup "$d" "$file" 2>/dev/null; then echo "$d"; exit 0; fi
+    n=$((n + 1))
+done
+echo "nessun loop device libero" >&2; exit 1

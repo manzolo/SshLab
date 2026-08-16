@@ -1,0 +1,23 @@
+{
+  "name": "sshlab",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "EDU-SSH · SSH Lab — imparare SSH con due macchine vere, affiancate nel browser",
+  "homepage": "https://manzolo.github.io/SshLab/",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/manzolo/SshLab.git"
+  },
+  "license": "MIT",
+  "author": "Andrea Manzi (manzolo)",
+  "scripts": {
+    "serve": "python3 -m http.server 8802",
+    "image": "make -C lab all",
+    "test": "node --test tests/content.test.js",
+    "test:labs": "node tests/labs.mjs",
+    "spike": "node tools/spike6.mjs",
+    "e2e": "node tools/e2e.mjs http://127.0.0.1:8802/",
+    "new-chapter": "node tools/new-chapter.mjs"
+  }
+}

@@ -1,0 +1,60 @@
+name: Pubblica su GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with: { node-version: '24' }
+
+      # I test di struttura girano sempre: sono secondi, e un capitolo mal formato
+      # non deve arrivare online.
+      - run: npm test
+
+      # L'immagine si ricostruisce SOLO se cambia qualcosa che la riguarda.
+      # Con i contenuti fuori dall'immagine, il caso normale e' cache hit: un push
+      # di soli capitoli passa in un paio di minuti.
+      - uses: actions/cache@v4
+        id: cache-immagine
+        with:
+          path: images
+          key: img-${{ hashFiles('lab/Dockerfile.v86', 'lab/packages.txt', 'lab/overlay/**', 'lab/build-state.mjs', 'vendor/v86/VERSION') }}
+
+      - name: Strumenti per la build dell'immagine
+        if: steps.cache-immagine.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update && sudo apt-get install -y zstd
+          pip install zstandard
+
+      - name: Costruisci rootfs e snapshot
+        if: steps.cache-immagine.outputs.cache-hit != 'true'
+        run: make -C lab all
+
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: . }
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

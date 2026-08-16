@@ -1,0 +1,68 @@
+#!/bin/sh
+# lab — la CLI che l'utente ha in mano.
+#
+# Nel browser serve soprattutto per `lab answer` (gli esercizi di sola lettura);
+# nel laboratorio locale e' anche il modo di far partire e verificare gli esercizi
+# dei capitoli 17-22. Stesso comando, stessi script di verifica, due runtime.
+
+set -u
+LIB=/opt/lab/lib/labcheck.sh
+STATE=/opt/lab/state
+LAB="${LAB:-/root/lab}"
+mkdir -p "$STATE"
+
+uso() {
+    cat <<'EOF'
+lab — laboratorio di EDU-LINUX
+
+  lab answer            consegna una risposta letta da stdin
+                        es:  grep -c ERROR app.log | lab answer
+  lab answer 42         consegna una risposta scritta a mano
+  lab start CH EX       prepara l'esercizio (laboratorio locale)
+  lab check [CH EX]     verifica l'esercizio
+  lab reset             ricomincia da capo, stesso mondo
+  lab seed              mostra il seme del mondo attuale
+EOF
+}
+
+corrente() { cat "$STATE/current" 2>/dev/null; }
+
+esegui() { # esegui <dir> <script>
+    [ -f "/opt/lab/$1/$2" ] || { echo "esercizio non disponibile qui: $1"; exit 2; }
+    EDU_SEED="$(cat "$STATE/seed" 2>/dev/null || echo 1)" LAB="$LAB" \
+        sh -c ". $LIB; . '/opt/lab/$1/$2'"
+}
+
+case "${1:-}" in
+    answer)
+        shift
+        if [ $# -gt 0 ]; then printf '%s' "$*" > "$STATE/answer"
+        else cat > "$STATE/answer"; fi
+        echo "risposta consegnata: $(tr -d '\n' < "$STATE/answer")"
+        ;;
+    start)
+        [ $# -eq 3 ] || { uso; exit 1; }
+        d="ch$2/e$3"
+        printf '%s' "$d" > "$STATE/current"
+        [ -f "$STATE/seed" ] || date +%s > "$STATE/seed"
+        rm -rf "$LAB"; mkdir -p "$LAB"; rm -f "$STATE/answer"
+        esegui "$d" seed.sh
+        echo "pronto. La tua area di lavoro e' $LAB"
+        ;;
+    check)
+        if [ $# -eq 3 ]; then d="ch$2/e$3"; else d="$(corrente)"; fi
+        [ -n "$d" ] || { echo "nessun esercizio in corso: usa  lab start CH EX"; exit 1; }
+        out=$(esegui "$d" check.sh); rc=$?
+        echo "$out" | sed -n 's/^EDU CHECK /  /p'
+        echo "$out" | sed -n 's/^EDU RESULT /  esito: /p'
+        [ $rc -eq 0 ] && echo "  ✓ superato" || echo "  ✗ non ancora"
+        exit $rc
+        ;;
+    reset)
+        d="$(corrente)"; [ -n "$d" ] || { echo "nessun esercizio in corso"; exit 1; }
+        rm -rf "$LAB"; mkdir -p "$LAB"; rm -f "$STATE/answer"
+        esegui "$d" seed.sh; echo "ricominciato (stesso mondo)"
+        ;;
+    seed) cat "$STATE/seed" 2>/dev/null || echo "(nessun seme)" ;;
+    *) uso ;;
+esac

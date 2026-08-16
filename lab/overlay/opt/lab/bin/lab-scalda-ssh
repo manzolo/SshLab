@@ -1,0 +1,62 @@
+#!/bin/sh
+# lab-scalda-ssh — una connessione SSH completa, fatta apposta a vuoto, PRIMA che
+# lo snapshot venga salvato.
+#
+# Il motivo, misurato: il primo `ssh` di una macchina appena avviata costa piu' di
+# tre minuti, il secondo sette secondi. La differenza non e' la crittografia (che
+# in v86 e' rapida: una chiave ed25519 si genera in 0,9 s) ma la LETTURA DEI
+# BINARI dal filesystem 9p — `ssh`, `sshd-session`, `sshd-auth`, `libcrypto.so.3`,
+# `libssl.so.3`, tutti presi blocco per blocco alla prima invocazione.
+#
+# Il rimedio e' gratuito perche' lo snapshot salva la RAM, e la page cache STA
+# nella RAM: se quei binari li leggiamo qui, in fase di build, chi apre il lab li
+# trova gia' pronti. Il conto lo paga la CI una volta, invece di ogni studente
+# ogni volta.
+#
+# NB: e' l'eccezione dichiarata alla regola "niente warm-up nello snapshot" che
+# vale per il lab fratello. La' era stato misurato che non serviva; qui e' la
+# differenza fra un lab che si usa e uno che sembra rotto. Le regole ereditate si
+# rimisurano, non si applicano a scatola chiusa.
+
+set -e
+STATO=/run/lab
+SRV_IP=$(cat "$STATO/srv_ip" 2>/dev/null || echo 10.10.0.2)
+UTENTE_PC=$(cat "$STATO/pc_user" 2>/dev/null || echo andrea)
+UTENTE_SRV=$(cat "$STATO/srv_user" 2>/dev/null || echo deploy)
+SCALDA=/root/.scalda
+
+rm -rf "$SCALDA"; mkdir -p "$SCALDA"
+
+# Una coppia usa-e-getta: NON e' la chiave dello studente, che se la generera' lui
+# nel capitolo 2. Serve solo a far passare un handshake completo.
+ssh-keygen -t ed25519 -N '' -f "$SCALDA/k" -q </dev/null
+
+# autorizzarla sul server, in via temporanea
+install -d -m 700 -o "$UTENTE_SRV" -g "$UTENTE_SRV" "/home/$UTENTE_SRV/.ssh"
+cp "$SCALDA/k.pub" "/home/$UTENTE_SRV/.ssh/authorized_keys"
+chown "$UTENTE_SRV:$UTENTE_SRV" "/home/$UTENTE_SRV/.ssh/authorized_keys"
+chmod 600 "/home/$UTENTE_SRV/.ssh/authorized_keys"
+
+# `-n` e' obbligatorio: senza, ssh legge lo standard input e lo inoltra al comando
+# remoto, e se lo stdin non si chiude mai il comando remoto finisce ma ssh resta
+# in attesa. E' la stessa ragione per cui `ssh` dentro uno script vuole sempre -n.
+ssh -n -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+    -o ConnectTimeout=60 -i "$SCALDA/k" "$UTENTE_SRV@$SRV_IP" true 2>/dev/null || true
+
+# e una seconda, che a questo punto e' quella "a caldo"
+ssh -n -o BatchMode=yes -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null \
+    -o ConnectTimeout=60 -i "$SCALDA/k" "$UTENTE_SRV@$SRV_IP" true 2>/dev/null || true
+
+# si scaldano anche gli strumenti che lo studente usera' subito
+ssh-keygen -lf "$SCALDA/k.pub" >/dev/null 2>&1 || true
+ssh-agent -s >/dev/null 2>&1 || true
+ssh-add -l >/dev/null 2>&1 || true
+ssh-copy-id 2>/dev/null || true
+
+# Via ogni traccia: la chiave del riscaldamento non deve sopravvivere allo
+# snapshot, o si troverebbe una porta gia' aperta senza averla aperta.
+rm -rf "$SCALDA"
+rm -f "/home/$UTENTE_SRV/.ssh/authorized_keys"
+rm -f /root/.ssh/known_hosts
+
+echo "lab-scalda-ssh: fatto"
