@@ -79,28 +79,6 @@ async function apri(cap, es, box) {
     corpo.append(el("p", "es-brief", tr(es.brief)));
     corpo.append(costruisciComeSiFa(es));
 
-    // Nei capitoli locali non c'e' una macchina da interrogare: l'esercizio si fa
-    // nel container, e la verifica la esegue `lab check`. Il pannello lo dice invece
-    // di mostrare un bottone che non potrebbe funzionare.
-    if (cap.runtime === "local") {
-        const box2 = el("div", "locale");
-        box2.append(el("h3", null, t("localeTitolo")));
-        const cmd = `./lab/local/run.sh ${cap.num} ${es.id.replace("e", "")}\n` +
-                    `docker exec -it linuxlab bash\n` +
-                    `lab check ${cap.num} ${es.id.replace("e", "")}`;
-        box2.append(el("pre", null, cmd));
-        const b = el("button", "btn mini", t("localeCopia"));
-        b.onclick = () => {
-            navigator.clipboard?.writeText(cmd);
-            b.textContent = t("localeCopiato");
-            setTimeout(() => b.textContent = t("localeCopia"), 1600);
-        };
-        box2.append(b);
-        corpo.append(box2);
-        corpo.append(costruisciAiuti(es));
-        return;
-    }
-
     const barra = el("div", "es-barra");
     const btnVer = el("button", "btn primario", t("verifica"));
     const btnRic = el("button", "btn mini", t("labRicomincia"));

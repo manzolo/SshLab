@@ -18,7 +18,7 @@ import { join } from "node:path";
 
 const URL_BASE = process.argv[2] || "http://127.0.0.1:8802/";
 const PORTA = 9466;
-const profilo = mkdtempSync(join(tmpdir(), "linuxlab-btn-"));
+const profilo = mkdtempSync(join(tmpdir(), "sshlab-btn-"));
 
 const chrome = spawn(process.env.CHROME || "google-chrome", [
     "--headless=new", "--disable-gpu", "--no-sandbox",
@@ -59,7 +59,7 @@ await cmd("Page.navigate", { url: `${URL_BASE}?lang=it&ch=2` });
 await cmd("Page.bringToFront");
 await dormi(2000);
 // niente overlay dell'introduzione, che coprirebbe i pulsanti
-await val(`localStorage.setItem('linuxlab.introSeen','true')`);
+await val(`localStorage.setItem('sshlab.introSeen','true')`);
 await cmd("Page.reload", { ignoreCache: true });
 
 let pronta = false;

@@ -66,7 +66,7 @@ const chapter = `export default {
               note: ${bl("TODO: cosa guardare in questa riga.", "TODO: what to look at here.")} },
         ] },
 ${locale ? `        { kind: "local", html: ${bl("TODO: PERCHÉ non gira nel browser. Il motivo tecnico è contenuto, non una scusa.", "TODO: WHY it does not run in the browser.")},
-            cmd: "./lab/local/run.sh ${num} 1\\ndocker exec -it linuxlab bash" },
+
         { kind: "transcript", src: "transcript.json" },
         { kind: "predict",
           domanda: ${bl("TODO: cosa succede se…?", "TODO: what happens if…?")},

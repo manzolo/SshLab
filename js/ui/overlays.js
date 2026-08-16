@@ -1,8 +1,8 @@
-// overlays.js — sommario, guida "Basi" e quaderno di bordo, sullo stesso velo.
+// overlays.js — il sommario e la guida "Basi", sullo stesso velo.
 
 import { t, tr } from "../i18n.js";
 import { CAPITOLI, capitolo } from "../../content/index.js";
-import { progressiFatti, quaderno } from "../storage.js";
+import { progressiFatti } from "../storage.js";
 import INTRO from "../strings/intro.js";
 
 const velo = () => document.getElementById("velo");
@@ -77,34 +77,4 @@ export function apriIntro(vaiAlPrimo) {
     velo().hidden = false;
 }
 
-// ---------------------------------------------------------------- quaderno
 
-export function apriQuaderno() {
-    const q = quaderno();
-    const voci = Object.entries(q).sort((a, b) => a[1] - b[1] || a[0].localeCompare(b[0]));
-    const c = el("div", "quaderno");
-
-    if (!voci.length) {
-        c.append(el("p", null, t("quadernoVuoto")));
-    } else {
-        const tb = el("table");
-        for (const [cmd, num] of voci) {
-            const r = el("tr");
-            r.append(el("td", null, cmd), el("td", null, t("quadernoDa", num)));
-            tb.append(r);
-        }
-        c.append(tb);
-        const b = el("button", "btn mini", t("quadernoEsporta"));
-        b.style.marginTop = "12px";
-        b.onclick = () => {
-            const md = "# Linux Lab — il mio quaderno\n\n" +
-                voci.map(([cmd, n]) => `- \`${cmd}\` — ${t("quadernoDa", n)}`).join("\n") + "\n";
-            const u = URL.createObjectURL(new Blob([md], { type: "text/markdown" }));
-            const a = document.createElement("a");
-            a.href = u; a.download = "linuxlab-quaderno.md"; a.click();
-            setTimeout(() => URL.revokeObjectURL(u), 3000);
-        };
-        c.append(b);
-    }
-    apriVelo([el("h2", null, t("quadernoTitolo")), c]);
-}

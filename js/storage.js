@@ -2,7 +2,11 @@
 // Il fallback non e' pignoleria: in navigazione privata localStorage lancia,
 // e un lab che esplode perche' non puo' salvare i progressi e' un lab rotto.
 
-const PREFIX = "linuxlab.";
+// Il prefisso NON e' un dettaglio: su manzolo.github.io tutti i lab della collana
+// stanno sotto la stessa origine e quindi condividono lo stesso localStorage. Con
+// il prefisso del lab fratello i due si sarebbero scambiati progressi, semi e
+// lingua — un guasto che si vede solo se hai aperto tutti e due, cioe' tardi.
+const PREFIX = "sshlab.";
 const memoria = new Map();
 let disponibile = (() => {
     try { const k = PREFIX + "_t"; localStorage.setItem(k, "1"); localStorage.removeItem(k); return true; }

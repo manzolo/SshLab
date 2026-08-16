@@ -4,127 +4,132 @@ Guida per Claude Code (claude.ai/code) quando lavora in questo repository.
 
 ## Cos'è
 
-**EDU-LINUX · Linux Lab** — 22 capitoli per imparare Linux, con un **kernel Linux vero** che
-gira nel browser via [v86](https://github.com/copy/v86). Fa parte della collana EDU-\* di
-manzolo. Sito statico bilingue IT/EN, **zero dipendenze runtime, zero build del sito**.
+**EDU-SSH · SSH Lab** — imparare SSH con **due macchine vere affiancate**, dentro il browser.
+Kernel Linux reale via [v86](https://github.com/copy/v86), OpenSSH vero, terminali xterm.js.
+Fa parte della collana EDU-\* di manzolo. Sito statico bilingue IT/EN, **zero dipendenze
+runtime, zero build del sito**.
 
-Non è un simulatore: è Linux. Questa distinzione governa quasi ogni decisione qui dentro.
+Nasce da LinuxLab (stesso motore, copiato al commit `a8dee38` e poi divergente) e ne eredita
+le convenzioni. Quello che cambia sta in una frase: **le macchine sono due.**
 
 ## Farlo girare
 
 ```bash
-npm run serve          # http://localhost:8801 (i capitoli si leggono anche senza immagine)
-npm run image          # ~4 min: costruisce rootfs + snapshot in images/ (serve Docker + zstd + python zstandard)
+npm run image     # ~4 min: rootfs + snapshot (serve Docker + zstd + python zstandard)
+npm run serve     # http://localhost:8802
 ```
 
-Serve un server statico: i moduli ES non si caricano da `file://`. Non c'è nessun passo di
-build per il sito; le modifiche sono vive al refresh. `images/` è in `.gitignore`: la
-costruisce la CI.
+Serve un server statico: i moduli ES non si caricano da `file://`. `images/` è in `.gitignore`.
 
 ## Architettura
 
-### Le due decisioni che reggono tutto
+### Le tre decisioni che reggono tutto
 
-1. **Uno snapshot solo per tutti i 22 capitoli** (`images/state.bin.zst`, ~11 MB). A freddo il
-   boot da 9p dura ~46 s; dallo snapshot il prompt c'è in 0,6 s. Uno solo significa una URL
-   in cache per 21 capitoli, e la macchina che resta *la stessa* fra un capitolo e l'altro.
-2. **I contenuti NON stanno nell'immagine.** Vivono in `content/chNN/` ed entrano a runtime
-   via `create_file`. Cambiare un esercizio è un commit di testo, non una ricostruzione da
-   due minuti. (È anche obbligato: l'albero 9p è congelato dentro lo snapshot.)
+1. **Due host, una VM.** Non due macchine virtuali: un kernel solo con due *network
+   namespace* collegati da una coppia `veth`. Costa una CPU emulata invece di due, uno
+   snapshot invece di due, e la verifica può guardare dentro l'altro host senza un secondo
+   canale — che sarebbe poi quello che l'esercizio potrebbe rompere.
+2. **Tre seriali.** ttyS0 è il terminale del pc, **ttyS2 quello del server**, ttyS1 il canale
+   di verifica. In v86 ttyS0 e ttyS2 condividono l'IRQ 4 e ttyS1 sta sull'altra linea: il
+   canale fragile (richiesta/risposta con timeout) è isolato apposta, mentre su un terminale
+   una battuta persa la ripara la battuta dopo.
+3. **Il mondo nasce dentro lo snapshot.** `lab-hosts-up` gira da `::sysinit:` e costruisce
+   host, cavo, utenti e sshd *prima* che lo stato venga salvato; `lab-scalda-ssh` fa passare
+   una connessione a vuoto. Chi apre il lab trova tutto in piedi in mezzo secondo.
 
 ### I file che contano
 
-- `js/lab/machine.js` — la VM, **una sola per sessione**. Le opzioni del costruttore devono
-  coincidere ESATTAMENTE con `lab/build-state.mjs`: v86 ripristina uno stato solo con le
-  stesse opzioni. Se `uart1` manca da una delle due parti, il canale di verifica sparisce.
-- `js/lab/agent.js` — il canale di verifica su **ttyS1**, non sul terminale visibile.
-- `js/lab/runner.js` — inietta gli `.sh` dell'esercizio e raccoglie il verdetto.
-- `js/ui/exercises.js` — il verdetto: fatto → perché → **comando di diagnosi**.
-- `lab/overlay/opt/lab/lib/labcheck.sh` — generatori deterministici e helper del verdetto.
-- `lab/overlay/opt/lab/bin/labagentd` — l'agente seriale nel guest (~90 righe di `ash`).
+- `js/lab/machine.js` — la VM. Le opzioni devono coincidere **esattamente** con
+  `lab/build-state.mjs` e con i test: v86 ripristina uno stato solo con le stesse opzioni.
+  Le confronta `tests/opzioni.test.js` su tutti e cinque i file che le dichiarano.
+- `js/lab/terminal.js` — i due xterm, uno per seriale. I byte della tastiera passano da una
+  **coda** (8 byte ogni 4 ms): la UART ha 16 byte di FIFO e nessun controllo di flusso.
+- `js/lab/agent.js` — il canale di verifica su ttyS1, protocollo a righe JSON.
+- `lab/overlay/opt/lab/bin/lab-hosts-up` — costruisce i due host e crea
+  **`/run/lab/entra-server`**, l'unico modo di entrare nel server.
+- `lab/overlay/opt/lab/lib/labcheck.sh` — helper di verifica, fra cui `lab_srv`,
+  `lab_login_riuscito` e `lab_sshd_dice`.
+- `content/chNN/chapter.js` + `content/chNN/eN/{seed,check,solution,cheat}.sh`.
 
 ## Convenzioni non negoziabili
 
-**Ogni stringa esiste in `it` e `en`.** I test lo verificano camminando l'intero oggetto
-capitolo: una coppia `{it, en}` con un lato vuoto fa fallire `npm test`.
+**Ogni stringa esiste in `it` e `en`.** I test camminano l'intero oggetto capitolo.
 
-**Gli `.sh` sono neutri rispetto alla lingua.** Emettono codici (`EDU CHECK id PASS/FAIL`);
-i messaggi bilingui (`why`, `nudge`, `hints`) stanno nel `chapter.js`. Stessa regola dei
-fratelli della collana: gli eventi del motore sono codici, la UI li traduce a render.
+**Asserire l'invariante, mai la forma del comando.** Se un `check.sh` contiene un `grep` sul
+comando dell'utente, quasi certamente è scritto male. Qui la forma più forte è
+`lab_login_riuscito`: apre una connessione vera con `BatchMode=yes` — che fallisce invece di
+chiedere la password, e quindi trasforma un'assenza in una proprietà misurabile.
 
-**Gli id dei check nel `chapter.js` devono combaciare con quelli emessi da `check.sh`.**
-Il test lo verifica in entrambe le direzioni: un check dichiarato e non emesso, o emesso e
-non spiegato, fa fallire la build.
+**Le chiavi si confrontano per IMPRONTA, mai per nome di file.** `id_ed25519` e `lavoro` sono
+la stessa chiave se l'impronta combacia.
 
-**Asserire l'invariante, mai la forma del comando.** `chmod 644` e `chmod u=rw,go=r` sono lo
-stesso fatto: il check guarda i bit. Il cron delle 3:30 si verifica sui campi minuto/ora, non
-sulla stringa. La regola pratica: *se un `check.sh` contiene un `grep` sul comando
-dell'utente, quasi certamente è scritto male.*
+**Tutto ciò che varia passa da `edu_rand_*`.** Indirizzi, nomi utente, quale chiave è già
+autorizzata: se il numero non lo puoi sapere, non lo puoi cablare.
 
-**Tutto ciò che varia passa da `edu_rand_*`.** È lì che vive l'anti-trucco: se il numero non
-lo puoi sapere, non lo puoi cablare. E dove possibile l'atteso si **misura** invece di
-assumerlo (vedi `content/ch13/e1/seed.sh`, che calcola il vincitore con lo stesso `du` che
-userà chi studia).
+**Si entra nel server in UN modo solo**, `/run/lab/entra-server`, che porta dentro sia la rete
+sia il nome. Averne due (uno con la sola rete) è già costato un bug: sshd apriva sessioni con
+l'indirizzo del server e l'hostname del pc, e il prompt diceva `deploy@pc`.
 
-**localStorage sempre namespacizzato `linuxlab.` e sempre in try/catch** (`js/storage.js`),
-con fallback in memoria: in navigazione privata `localStorage` lancia.
-
-**README.md (IT) e README.en.md sono documenti paralleli**: le modifiche visibili all'utente
-vanno in entrambi.
+**localStorage namespacizzato `sshlab.`** — su manzolo.github.io i lab della collana
+condividono l'origine, quindi il prefisso è l'unica cosa che tiene separati i progressi.
 
 ## Aggiungere un capitolo
 
 ```bash
-npm run new-chapter -- 23 nome [--esercizi 3] [--local]
+npm run new-chapter -- 2 chiavi
 ```
 
-Poi: riga in `content/index.js`, riempi i TODO, togli `draft: true`, e `npm test`.
-I capitoli `draft: true` sono nascosti dal sommario e saltati dai test: **si può committare
-un capitolo a metà senza rompere niente.**
+Poi: riga in `content/index.js` (e via la voce corrispondente da `IN_ARRIVO`), riempi i TODO,
+`npm test`. Ogni esercizio vuole i quattro script, e il `cheat.sh` **deve fallire**.
 
 ## Test
 
 | comando | cosa fa | quanto dura |
 |---|---|---|
-| `npm test` | struttura, bilinguismo, id dei check, prerequisiti | secondi |
-| `npm run test:labs` | avvia la VERA macchina, esegue ogni esercizio del browser | ~6 min |
-| `npm run test:labs-local` | i capitoli 17-22 nel container Debian+systemd | ~2 min |
-| `npm run e2e` | smoke test su Chrome headless (serve `npm run serve` attivo) | ~1 min |
+| `npm test` | struttura, bilinguismo, opzioni della macchina coerenti | secondi |
+| `npm run test:labs` | avvia la VERA macchina, ogni esercizio su tre semi | minuti |
+| `npm run test:consegna` | il giro della consegna **digitando nel terminale** | ~1 min |
+| `npm run test:identita` | dopo un `ssh` il prompt dice `deploy@server` | ~2 min |
+| `npm run test:tastiera` | quello che scrivi è quello che arriva | ~2 min |
+| `npm run e2e` | smoke test su Chrome headless | ~1 min |
+| `npm run spike` | la prova dell'architettura, con i tempi | ~1 min |
 
-`test:labs` esegue le cinque asserzioni della collana su ogni esercizio: lo stato iniziale
-non passa già · la soluzione passa su **tre semi diversi** · il `cheat.sh` **fallisce**.
+I tre `test:*` in mezzo esistono per una ragione sola: **fanno il giro come lo fa una
+persona**, digitando nel terminale, invece di passare dal canale di servizio. Tutti i difetti
+trovati usando il lab erano invisibili agli altri test, perché gli altri test non leggono, non
+scorrono e sanno già la risposta.
 
 ## Trappole già scoperte (non ripercorrerle)
 
-- **`--cgroupns=private` sì, bind mount di `/sys/fs/cgroup` NO.** Con cgroup v2 Docker prepara
-  già un `/sys/fs/cgroup` scrivibile; montarci sopra quello dell'host lo rende read-only e
-  systemd esce con 255 **senza stampare una parola**.
-- **Dopo `restore_state` la macchina non emette nulla** finché non la solleciti: il prompt era
-  già stato stampato prima dello snapshot. `machine.js` manda un `\n` su ttyS0 apposta.
-- **`labagentd` non eredita `HOME`.** È impostato esplicitamente a `/root`: senza, uno script
-  che scrive in `~/lab` finisce in `/lab` e fallisce solo durante la verifica.
-- **L'agente azzera `$LAB` e `$STATE` PRIMA del seed.** Un seed non può quindi leggere valori
-  salvati dal seed precedente (ci sono cascato con `ch11`: la pulizia va fatta per pattern).
-- **`grep -c` stampa già `0` ed esce con 1**: un `|| echo 0` raddoppia lo zero.
-- **Niente `srand()`/`rand()` di awk per i generatori.** Con semi vicini i primi valori sono
-  correlati e due salt consecutivi producono lo stesso nome di file. `labcheck.sh` ha un LCG
-  scritto a mano con venti giri a vuoto.
-- **systemd 257 risolve anche un `ExecStart` non assoluto.** Non è più l'errore che era: il
-  guasto didattico di `ch17.e2` è il permesso di esecuzione mancante (`203/EXEC`).
-- **Senza udev, LVM non crea i nodi dei volumi.** Servono `lvcreate -Zn`, `vgscan --mknodes` e
-  l'helper `lab-loop`, che fa `mknod` dei loop device.
-- **I loop device e i volumi LVM sono globali dell'host**, anche da dentro un container: nel
-  guest si vedono pure gli snap di sistema. Da qui il prefisso `lab-*` e `run.sh cleanup`.
-- **Niente warm-up nello snapshot.** Misurato: non riduce le letture 9p e senza `drop_caches`
-  gonfia lo stato del 40%.
+- **`adduser -D` lascia l'account BLOCCATO**, e per OpenSSH un account bloccato è un utente
+  che non esiste — anche entrando con la chiave, dove la password non c'entra. Lato client si
+  legge solo `Permission denied (publickey)`. Serve `chpasswd` (che sblocca), e la build lo
+  verifica.
+- **`ssh` senza `-n` non torna**: si mette in ascolto sullo stdin, e se lo stdin non si chiude
+  mai (il canale di verifica) il comando remoto finisce ma ssh resta lì ad aspettare.
+- **L'escaping JSON dell'agente deve togliere anche il `\r`** (`\013-\037`, non
+  `\013\014\016-\037`): `ssh` stampa "Warning: Permanently added …\r\n" al primo incontro con
+  un host, e un `\r` grezzo rende illegale la stringa JSON. Il sintomo è «la verifica non ha
+  risposto» su un comando finito da un pezzo. ⚠️ **Il difetto è ereditato: c'è anche in
+  LinuxLab, che è online.**
+- **`ssh-keygen -A` genera anche una RSA**, che su CPU emulata costa minuti. Solo ed25519.
+- **Il primo `ssh` a freddo costa oltre tre minuti** (sono i binari letti dal 9p, non la
+  crittografia): per questo `lab-scalda-ssh` gira prima dello snapshot. È l'eccezione
+  dichiarata alla regola "niente warm-up" del lab fratello — le regole ereditate si
+  rimisurano, non si applicano a scatola chiusa.
+- **Il servizio hostname di Alpine legge `/etc/conf.d/hostname`**, non `/etc/hostname`.
+- **`/etc/hosts` non si riscrive durante `docker build`**: lo gestisce il motore.
+- **Un ResizeObserver sugli schermi si autoalimenta**: ridimensionare xterm cambia lo schermo,
+  che rimette in moto l'osservatore, e ogni giro spara uno `stty` sul canale di verifica. Si
+  osservano i riquadri esterni.
+- **In una griglia CSS la traccia implicita è `auto`** e cresce fino al contenuto più largo:
+  xterm chiedeva le sue 80 colonne e la pagina finiva larga il doppio della finestra.
+- **Tre aree che scorrono per conto loro spezzano la lettura.** Vale qui come valeva nel lab
+  fratello: scorre la pagina, e basta.
 
-## Sicurezza e onestà
+## Onestà
 
-Il laboratorio locale dei capitoli 21-22 gira `--privileged`. È dichiarato nel README, nel
-capitolo e in un riquadro a video prima dell'avvio. **Non toglierlo per fare pulizia:** chi
-studia deve sapere che quei volumi finiscono nel suo `lsblk`.
-
-Allo stesso modo, i limiti del browser (niente systemd, niente rete vera, niente più
-dispositivi a blocchi) sono **contenuto**, non scuse: spiegano cosa serve davvero a systemd
-per esistere. Se un giorno diventano superabili, si aggiornano; finché non lo sono, si
-dicono.
+Le due macchine **non sono due computer**, e il capitolo 1 lo dice apertamente: stesso kernel,
+stesso disco, due pile di rete e due utenti. È quello che è un container, ed è contenuto —
+non una scusa. Allo stesso modo si dichiara che `lab answer` esiste solo qui dentro, e che una
+RSA-4096 non si genera perché costerebbe minuti.
