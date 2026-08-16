@@ -7,18 +7,33 @@
 //
 // Uso:  node tools/e2e.mjs [url] [capitoli...]
 //   es: node tools/e2e.mjs http://127.0.0.1:8802/ ch01 ch03
+//   senza capitoli si provano TUTTI quelli dichiarati in content/index.js
+//
+// Il valore predefinito era `["ch01"]`, e il comando documentato — `npm run e2e`,
+// quello che sta nel README, in AGENTS.md e in STATO.md — stampava «tutto verde»
+// dopo aver toccato due esercizi su venticinque. Il problema non era che provasse
+// poco: era che la misura si presentava piu' grande di quello che era, ed e'
+// esattamente il difetto che questo lab passa dodici capitoli a insegnare a
+// riconoscere.
 
 import { spawn } from "node:child_process";
 import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 
+const ROOT = join(fileURLToPath(new URL(".", import.meta.url)), "..");
 const URL_BASE = process.argv[2] || "http://127.0.0.1:8802/";
-const CAPITOLI = process.argv.slice(3);
+const CHIESTI = process.argv.slice(3);
+// L'indice del corso e' l'unica fonte: un capitolo nuovo entra nell'e2e nello
+// stesso momento in cui entra nel corso, senza che nessuno debba ricordarsi di
+// aggiornare anche questo file.
+const { CAPITOLI: INDICE } = await import(join(ROOT, "content/index.js"));
+const CAPITOLI = CHIESTI.length ? CHIESTI : INDICE.map(c => c.id);
 const PORTA = 9455;
 const BIN = process.env.CHROME || "google-chrome";
 
-const profilo = mkdtempSync(join(tmpdir(), "linuxlab-e2e-"));
+const profilo = mkdtempSync(join(tmpdir(), "sshlab-e2e-"));
 const chrome = spawn(BIN, [
     "--headless=new", "--disable-gpu", "--no-sandbox",
     `--user-data-dir=${profilo}`, `--remote-debugging-port=${PORTA}`,
@@ -107,9 +122,9 @@ const ko = (m) => { console.log(`  ✗ ${m}`); problemi.push(m); esitoFinale = 1
         ? ok(`due host distinti: ${ipPc} e ${ipSrv}`)
         : ko(`i due host non hanno indirizzi distinti: "${ipPc}" / "${ipSrv}"`);
 
-    // 3) il ciclo didattico, su ogni capitolo richiesto
-    const daProvare = CAPITOLI.length ? CAPITOLI : await val("JSON.stringify(window.__sshlab ? [] : [])").then(() => ["ch01"]);
-    for (const capId of daProvare) {
+    // 3) il ciclo didattico, su OGNI capitolo del corso (vedi in testa al file)
+    console.log(`  · ${CAPITOLI.length} capitoli da provare: ${CAPITOLI.join(" ")}`);
+    for (const capId of CAPITOLI) {
         const esito = await val(`(async () => {
           try {
             const L = window.__sshlab;
