@@ -16,11 +16,11 @@ export const CAPITOLI = [
     { id: "ch05", num: 5, carica: () => import("./ch05/chapter.js") },
     { id: "ch06", num: 6, carica: () => import("./ch06/chapter.js") },
     { id: "ch07", num: 7, carica: () => import("./ch07/chapter.js") },
+    { id: "ch08", num: 8, carica: () => import("./ch08/chapter.js") },
 ];
 
 // Quello che verra', dichiarato prima di essere scritto (vedi sopra).
 export const IN_ARRIVO = [
-    { num: 8,  titolo: { it: "Permessi: cosa pretende sshd", en: "Permissions: what sshd demands" } },
     { num: 9,  titolo: { it: "La passphrase", en: "The passphrase" } },
     { num: 10, titolo: { it: "ssh-agent", en: "ssh-agent" } },
     { num: 11, titolo: { it: "Troppe chiavi: IdentitiesOnly", en: "Too many keys: IdentitiesOnly" } },
