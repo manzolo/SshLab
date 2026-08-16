@@ -126,8 +126,10 @@ scorrono e sanno già la risposta.
 - **L'escaping JSON dell'agente deve togliere anche il `\r`** (`\013-\037`, non
   `\013\014\016-\037`): `ssh` stampa "Warning: Permanently added …\r\n" al primo incontro con
   un host, e un `\r` grezzo rende illegale la stringa JSON. Il sintomo è «la verifica non ha
-  risposto» su un comando finito da un pezzo. ⚠️ **Il difetto è ereditato: c'è anche in
-  LinuxLab, che è online.**
+  risposto» su un comando finito da un pezzo. Il difetto veniva da LinuxLab, ma **là non c'è
+  più**: dopo il fork (`a8dee38`) il commit `c30bc48` ha riscritto `_esc` a lista bianca —
+  `tr -cd '\11\12\40-\176'`, solo TAB, newline e ASCII stampabile — che il `\r` lo toglie per
+  costruzione. Verificato, non dedotto.
 - **`ssh-keygen -A` genera anche una RSA**, che su CPU emulata costa minuti. Solo ed25519.
 - **Il primo `ssh` a freddo costa oltre tre minuti** (sono i binari letti dal 9p, non la
   crittografia): per questo `lab-scalda-ssh` gira prima dello snapshot. È l'eccezione
