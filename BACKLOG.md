@@ -415,16 +415,97 @@ computer che non esistono più, e con accesso root.
 
 ## Se avanza tempo (capitoli 13+, non promessi in `IN_ARRIVO`)
 
-- **`ProxyJump` e il terzo host.** Con i namespace, aggiungere un `db` raggiungibile
-  **solo** dal server costa tre comandi in `lab-hosts-up`. È il modo giusto di
-  raccontare `-J`, e soprattutto **l'agent forwarding e i suoi rischi**: chi è root
-  sul salto può usare il tuo agent finché sei connesso.
+Due idee e un capitolo già specificato. Il **ch13 sotto è pronto da lavorare**: la parte
+difficile — renderlo misurabile — è risolta qui.
+
 - **`authorized_keys` con le restrizioni** (`command=`, `from=`, `restrict`): una chiave
   che può fare **una** cosa sola. È il modo in cui si fanno i backup automatici senza
   regalare una shell.
 - **Le chiavi firmate da una CA** (`TrustedUserCAKeys`): come si esce dal problema di
   `authorized_keys` quando i server diventano quindici. È dove finisce il corso e
   comincia l'infrastruttura.
+
+### ch13 · `ProxyJump` e agent forwarding — *il salto, e cosa costa la scorciatoia*
+
+**La cosa che si impara:** per arrivare a una macchina che non è raggiungibile da dove
+sei, ci sono due strade. Una lascia la tua chiave privata sul computer di mezzo. L'altra
+no — ed è anche la più comoda, il che è raro e va sfruttato.
+
+#### L'infrastruttura: un terzo host
+
+Con i namespace costa poco, ma **tre dettagli non sono facoltativi**: sono i tre punti in
+cui un capitolo del genere diventa finto.
+
+1. **`db` dev'essere davvero irraggiungibile dal pc.** Due reti separate — `pc↔server` su
+   `10.10.0.0/24`, `server↔db` su `10.10.1.0/24` — e sul server **`ip_forward` a zero**.
+   Se il server instrada, il pc arriva a `db` da solo e `ProxyJump` diventa teatro:
+   l'esercizio passerebbe anche senza aver capito niente. Va asserito in
+   `tests/infrastruttura.sh`, provando che **senza `-J` il login non arriva**.
+2. **Un terzo utente** (`dba`). Due namespace di rete non sono due filesystem: senza un
+   utente suo, `~/.ssh` di `db` sarebbe lo stesso file di qualcun altro. È la stessa
+   ragione per cui gli utenti sono già due, spiegata nel blocco PRO del capitolo 1.
+3. **Namespace di rete _e_ UTS**, con il suo `/run/lab/entra-db` e il suo `sshd` avviato
+   lì dentro (host key dal pool I1). Entrare con il solo `ip netns exec` rifà il bug del
+   prompt `deploy@pc` — `STATO.md` §5.3.
+
+Servono `lab_db` (gemello di `lab_srv`) e `lab_sshd_dice_db`: il testimone di questo
+capitolo è **il registro di `db`**, non quello del server.
+
+⚠️ Un secondo `sshd` residente fa crescere lo snapshot: rimisurarlo contro il tetto dei
+25 MB in `lab/build-state.mjs`. Oggi siamo a 16,6.
+
+#### e1 · Il salto (`stato`)
+
+Arrivare su `db` **partendo dal pc**, con `ssh -J deploy@<server> dba@<db>` o con un
+blocco `ProxyJump` in `~/.ssh/config`.
+
+**L'invariante, ed è quello che rende onesto il capitolo:**
+
+1. il registro di **`db`** porta un `Accepted publickey` con l'impronta **della chiave del
+   pc** — non di una chiave del server;
+2. **in `/home/deploy` non esiste nessuna chiave privata.** Il seed non ce la mette, e il
+   check verifica che continui a non essercene.
+
+Le due insieme dicono una cosa sola: *ci sei arrivato senza lasciare il tuo segreto sul
+computer di mezzo.* Con `-J` il salto inoltra soltanto TCP, e l'autenticazione a `db` la
+fa il client, da casa.
+
+**Il cheat da far fallire, ed è il pezzo forte:** copiare la privata sul server e fare i
+due salti a mano (`ssh server`, poi `ssh db` da lì). Funziona, arriva a destinazione — e
+il check lo boccia sulla seconda condizione. È esattamente l'abitudine che `ProxyJump`
+esiste per togliere di mezzo, ed è quella che quasi tutti hanno.
+
+#### e2 · L'agent forwarding, e il suo prezzo (`stato`)
+
+`ssh -A` porta il *socket* dell'agent sulla macchina remota. Non la chiave — quella
+l'agent non la consegna mai — ma **la facoltà di farsi firmare qualcosa**, per tutta la
+durata della sessione.
+
+**Come si misura, visto che il forwarding vive solo mentre la sessione è aperta:** lo si
+fa raccontare da dentro. `ssh -A deploy@<server> 'ssh-add -l > ~/agent-visto.txt'`, e il
+check confronta le impronte nel file con quelle dell'agent **del pc**
+(`lab_agent_impronte manzolo`). Se combaciano, dal server il tuo agent si vedeva davvero:
+la dimostrazione *è* l'esercizio.
+
+**E poi il conto**, che è il motivo per cui il capitolo esiste. Il blocco `pro` fa notare
+che quel socket sta in `/tmp` sul server e che **chiunque sia root lì lo può usare finché
+sei connesso** — non per rubare la chiave, che non si sposta, ma per entrare dove entri
+tu, mentre tu sei collegato. Il seed può renderlo palpabile lasciando nel registro di
+`db` un `Accepted` di troppo, arrivato dal server nell'istante in cui la sessione era
+aperta.
+
+La morale chiude il cerchio con e1: **`-J` non espone l'agent al salto, `-A` sì.** Il
+gesto giusto era già nel primo esercizio, ed era pure il più comodo.
+
+#### Perché vale, e perché resta fuori da `IN_ARRIVO`
+
+Vale perché è il primo capitolo in cui la risposta non è «configura meglio» ma «cambia
+strada», e perché è l'unico posto dove i namespace si vedono per quello che valgono: un
+terzo host costa tre comandi, con due VM sarebbe stato un altro progetto.
+
+Resta fuori finché non lo si decide: il corso a dodici capitoli è **completo così**, e
+questo è un seguito, non un buco. Metterlo in `IN_ARRIVO` lo trasformerebbe in una
+promessa, e la pagina la mostrerebbe come tale.
 
 ---
 
