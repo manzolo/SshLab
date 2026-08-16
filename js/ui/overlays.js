@@ -1,7 +1,7 @@
 // overlays.js — il sommario e la guida "Basi", sullo stesso velo.
 
 import { t, tr } from "../i18n.js";
-import { CAPITOLI, capitolo } from "../../content/index.js";
+import { CAPITOLI, IN_ARRIVO, capitolo } from "../../content/index.js";
 import { progressiFatti } from "../storage.js";
 import INTRO from "../strings/intro.js";
 
@@ -54,12 +54,26 @@ export async function apriSommario(idCorrente, vaiA) {
             b.append(el("span", null, tr(cap.title)));
             const n = cap.exercises?.length || 0;
             const f = (cap.exercises || []).filter(e => fatti.has(`${cap.id}.${e.id}`)).length;
-            const marchio = voce.runtime === "local" ? "💻" : voce.runtime === "hybrid" ? "🔀" : "";
-            b.append(el("span", "stato" + (n && f === n ? " pieno" : ""), `${marchio} ${n ? `${f}/${n}` : ""}`));
+            b.append(el("span", "stato" + (n && f === n ? " pieno" : ""), n ? `${f}/${n}` : ""));
             b.onclick = () => { chiudiVelo(); vaiA(voce.id); };
         }
         griglia.append(b);
     }
+
+    // I capitoli non ancora scritti stanno qui, spenti ma con il loro titolo. Erano
+    // gia' dichiarati in content/index.js e nessuno li disegnava: il sommario si
+    // fermava all'unico capitolo esistente, e insieme al bottone `Successivo` spento
+    // faceva sembrare finito un corso che comincia appena. La roadmap sta DENTRO il
+    // prodotto: un vuoto dichiarato toglie l'ansia meglio di un vuoto nascosto.
+    for (const voce of IN_ARRIVO) {
+        const b = el("button");
+        b.disabled = true;
+        b.append(el("span", "n", String(voce.num).padStart(2, "0")));
+        b.append(el("span", null, tr(voce.titolo)));
+        b.append(el("span", "stato", t("inLavorazione")));
+        griglia.append(b);
+    }
+
     apriVelo([el("h2", null, t("navIndice")), griglia]);
 }
 

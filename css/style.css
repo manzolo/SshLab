@@ -380,6 +380,9 @@ body.pro .probox { display: block; }
     padding: 8px 16px; background: var(--panel); border-top: 1px solid var(--panel-edge);
 }
 .etichetta { flex: 1; text-align: center; color: var(--ink-faint); font-size: 12.5px; }
+/* Perche' `Successivo` e' spento. Smorzata: e' una spiegazione, non un annuncio. */
+.piede-nota { opacity: .7; }
+.piede-nota::before { content: " · "; }
 
 .velo {
     position: fixed; inset: 0; background: rgba(6,10,14,.82);

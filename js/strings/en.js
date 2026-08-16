@@ -10,6 +10,7 @@ export default {
     capPrec: "← Previous",
     capSucc: "Next →",
     capDi: "Chapter {0} of {1}",
+    capProssimo: "the next one — {0} — is in progress",
     inLavorazione: "in progress",
     prerequisito: "This chapter assumes chapter {0}. If that means nothing to you, do it first.",
     vaiA: "go",

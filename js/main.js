@@ -1,8 +1,8 @@
 // main.js — cablaggio: lingua, profondità, navigazione, macchina, esercizi.
 
-import { initLang, setLang, getLang, onLangChange, refreshStatic, t } from "./i18n.js";
-import { get, set, progressiFatti } from "./storage.js";
-import { CAPITOLI, capitolo, primoCapitolo } from "../content/index.js";
+import { initLang, setLang, getLang, onLangChange, refreshStatic, t, tr } from "./i18n.js";
+import { get, set } from "./storage.js";
+import { CAPITOLI, IN_ARRIVO, capitolo, primoCapitolo } from "../content/index.js";
 import { disegnaCapitolo } from "./ui/chapter.js";
 import { inizializzaEsercizi, disegnaEsercizi, macchinaPronta, esercizioCorrente } from "./ui/exercises.js";
 import { apriSommario, apriIntro } from "./ui/overlays.js";
@@ -62,16 +62,37 @@ async function vaiA(id, spingiUrl = true) {
     aggiornaProgresso();
 }
 
+// Il totale e' quello del CORSO, non quello dei capitoli gia' scritti: dodici.
+// Dire "1 di 1" mentre il sommario ne annuncia dodici e' la stessa bugia detta due
+// volte, e per giunta con la barra dei progressi al 100% quando si e' appena
+// cominciato.
+const TOTALE = CAPITOLI.length + IN_ARRIVO.length;
+
 function aggiornaPiede(cap) {
     const i = CAPITOLI.findIndex(c => c.id === cap.id);
     $("btnPrec").disabled = i <= 0;
-    $("btnSucc").disabled = i >= CAPITOLI.length - 1;
-    $("etichettaCap").textContent = t("capDi", cap.num, CAPITOLI.length);
+
+    // Il capitolo dopo puo' non essere ancora scritto. In quel caso il bottone
+    // resta spento — non c'e' dove andare — ma il piede DICE perche' e quale sara':
+    // un bottone morto senza spiegazione si legge come un guasto, ed e' il primo
+    // posto dove si clicca quando si e' finito il capitolo.
+    const succ = CAPITOLI[i + 1];
+    const arrivo = IN_ARRIVO.find(c => c.num === cap.num + 1);
+    $("btnSucc").disabled = !succ;
+
+    const etichetta = $("etichettaCap");
+    etichetta.replaceChildren(document.createTextNode(t("capDi", cap.num, TOTALE)));
+    if (!succ && arrivo) {
+        const nota = document.createElement("span");
+        nota.className = "piede-nota";
+        nota.textContent = t("capProssimo", tr(arrivo.titolo));
+        etichetta.append(nota);
+    }
 }
 
 function aggiornaProgresso() {
     const i = CAPITOLI.findIndex(c => c.id === idCorrente);
-    $("barraProgresso").style.width = `${((i + 1) / CAPITOLI.length) * 100}%`;
+    $("barraProgresso").style.width = `${((i + 1) / TOTALE) * 100}%`;
 }
 
 const salta = d => {

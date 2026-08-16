@@ -75,12 +75,22 @@ condividono l'origine, quindi il prefisso è l'unica cosa che tiene separati i p
 
 ## Aggiungere un capitolo
 
+**Il lavoro che resta sta in [`BACKLOG.md`](BACKLOG.md)**: i capitoli 2…12 con, per ciascuno,
+l'invariante misurabile di ogni esercizio — che è la sola parte difficile. I testi si
+riscrivono; un check sbagliato insegna una cosa falsa. Prima dei capitoli ci sono quattro
+lavori di infrastruttura (i due pool di chiavi, gli helper nuovi, il dimagrimento
+dell'immagine): senza i primi due, metà dei capitoli non si può scrivere bene.
+
 ```bash
 npm run new-chapter -- 2 chiavi
 ```
 
 Poi: riga in `content/index.js` (e via la voce corrispondente da `IN_ARRIVO`), riempi i TODO,
 `npm test`. Ogni esercizio vuole i quattro script, e il `cheat.sh` **deve fallire**.
+
+`IN_ARRIVO` non è decorativo: il totale del piede («Capitolo 1 di 12»), la barra dei progressi
+e la seconda metà del sommario lo leggono. Spostare una voce da `IN_ARRIVO` a `CAPITOLI` è
+l'unica cosa che serve perché la navigazione dica il vero.
 
 ## Test
 
