@@ -93,6 +93,19 @@ async function provaInfrastruttura() {
     else ko(`I1-I4: infrastruttura NON valida — ${(r.out || "").replace(/\n/g, " | ").slice(0, 500)}`);
 }
 
+async function provaIsolamentoRete() {
+    await caricaScript("ch01", "e1", "seed.sh");
+    await caricaScript("ch05", "e1", "seed.sh");
+    await chiedi("seed", "ch01/e1", 424242);
+    const spostata = await chiedi("sh", "cat /run/lab/srv_ip");
+    await chiedi("seed", "ch05/e1", 424242);
+    const base = await chiedi("sh", "printf '%s/%s' \"$(cat /run/lab/pc_ip)\" \"$(cat /run/lab/srv_ip)\"");
+    if (spostata.out?.trim() !== "10.10.0.2" && base.out?.trim() === "10.10.0.1/10.10.0.2")
+        ok("ogni seed ripristina la rete dopo il mondo variabile di ch01");
+    else
+        ko(`isolamento rete: dopo ch01=${spostata.out?.trim()}, dopo ch05=${base.out?.trim()}`);
+}
+
 async function provaEsercizio(cap, es) {
     const etichetta = `${cap}.${es}`;
     const dir = `${cap}/${es}`;
@@ -144,6 +157,7 @@ await dormi(2500);
 const p = await chiedi("ping");
 if (!p.ok) { console.error("la macchina non risponde sul canale di verifica"); process.exit(1); }
 await provaInfrastruttura();
+await provaIsolamentoRete();
 console.log(`macchina pronta — provo ${capitoli.length} capitoli\n`);
 
 for (const cap of capitoli) {

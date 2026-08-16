@@ -68,6 +68,20 @@ registra_sshd_config() {
         > "$STATE/sshd_config.fp"
 }
 
+# ch01.e1 sposta deliberatamente la rete per rendere l'indirizzo non copiabile.
+# Quello stato non deve trapelare negli esercizi successivi, i cui testi usano la
+# topologia di base 10.10.0.1/2. Ogni seed parte quindi dallo stesso cavo; ch01.e1
+# lo sposta subito dopo, come parte del proprio mondo.
+ripristina_rete_base() {
+    ip addr flush dev veth-pc 2>/dev/null
+    ip addr add 10.10.0.1/24 dev veth-pc
+    /run/lab/entra-server ip addr flush dev veth-srv 2>/dev/null
+    /run/lab/entra-server ip addr add 10.10.0.2/24 dev veth-srv
+    printf '%s' 10.10.0.1 > /run/lab/pc_ip
+    printf '%s' 10.10.0.2 > /run/lab/srv_ip
+    ip neigh flush all 2>/dev/null
+}
+
 printf '{"ev":"ready","v":1}\n' > "$DEV"
 
 while IFS= read -r line; do
@@ -95,6 +109,7 @@ while IFS= read -r line; do
             # valori memorizzati dal seed, tutto. Resta solo il seme, che scriviamo ora.
             find "$STATE" -maxdepth 1 -type f ! -name current -delete 2>/dev/null
             printf '%s' "$2" > "$STATE/seed"
+            ripristina_rete_base
             out=$(run_lab "/opt/lab/$1/seed.sh")
             rc=$?
             [ "$rc" -ne 0 ] || registra_sshd_config
@@ -118,6 +133,7 @@ while IFS= read -r line; do
         reset)
             mkdir -p "$LAB"; find "$LAB" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null
             rm -f "$STATE/answer"
+            ripristina_rete_base
             out=$(run_lab "/opt/lab/$1/seed.sh")
             rc=$?
             [ "$rc" -ne 0 ] || registra_sshd_config
