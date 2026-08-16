@@ -34,6 +34,7 @@ export default {
     tipoStato: "stato",
     tipoRisposta: "risposta",
     tipoMetodo: "metodo",
+    comeSiFa: "Come si fa",
     esercizi: "Esercizi",
     esercizio: "Esercizio {0}",
     verifica: "Verifica",

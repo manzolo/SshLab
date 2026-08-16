@@ -14,9 +14,9 @@ DEV=/dev/ttyS1
 LIB=/opt/lab/lib/labcheck.sh
 STATE=/opt/lab/state
 # L'area di lavoro e' quella dell'utente del pc, non di root: da qui in poi chi
-# studia e' `andrea`, e un esercizio seminato in /root/lab sarebbe invisibile a lui
+# studia e' `manzolo`, e un esercizio seminato in /root/lab sarebbe invisibile a lui
 # — e illeggibile, visto che /root non e' suo.
-UTENTE_PC=andrea
+UTENTE_PC=manzolo
 LAB=/home/$UTENTE_PC/lab
 
 mkdir -p "$STATE"
@@ -89,7 +89,7 @@ while IFS= read -r line; do
             printf '%s' "$2" > "$STATE/seed"
             out=$(run_lab "/opt/lab/$1/seed.sh")
             rc=$?
-            # Il seed gira come root, ma l'area di lavoro e' di `andrea`: senza
+            # Il seed gira come root, ma l'area di lavoro e' di `manzolo`: senza
             # questo, chi studia si trova una cartella sua piena di file di root e
             # non ci puo' scrivere. Il messaggio sarebbe "Permission denied" su un
             # file appena comparso a casa propria — il tipo di guasto che fa dubitare

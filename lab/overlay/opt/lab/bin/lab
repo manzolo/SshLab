@@ -36,9 +36,21 @@ esegui() { # esegui <dir> <script>
 case "${1:-}" in
     answer)
         shift
-        if [ $# -gt 0 ]; then printf '%s' "$*" > "$STATE/answer"
-        else cat > "$STATE/answer"; fi
-        echo "risposta consegnata: $(tr -d '\n' < "$STATE/answer")"
+        # Si scrive, si rilegge, e SOLO ALLORA si conferma. La versione precedente
+        # annunciava "risposta consegnata:" anche quando la scrittura era fallita —
+        # e siccome la cartella delle consegne era di root mentre chi studia e'
+        # `manzolo`, falliva sempre. Restavano due righe di errore e, sotto, un
+        # messaggio rassicurante: un guasto travestito da successo, che e' la forma
+        # peggiore. (Trovato da Andrea al primo uso a mano, il 2026-08-16.)
+        if [ $# -gt 0 ]; then printf '%s' "$*" > "$STATE/answer" 2>/dev/null
+        else cat > "$STATE/answer" 2>/dev/null; fi
+        consegnata=$(tr -d '\n' < "$STATE/answer" 2>/dev/null)
+        if [ -z "$consegnata" ]; then
+            echo "non sono riuscito a registrare la risposta in $STATE/answer" >&2
+            echo "(dev'essere scrivibile da $(id -un): controlla i permessi)" >&2
+            exit 1
+        fi
+        echo "risposta consegnata: $consegnata"
         ;;
     start)
         [ $# -eq 3 ] || { uso; exit 1; }

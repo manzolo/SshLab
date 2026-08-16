@@ -442,3 +442,35 @@ body.pro .probox { display: block; }
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+/* ------------------------------------------------------- "come si fa"
+   Sempre aperto, a differenza dei suggerimenti: e' il minimo per cominciare —
+   quali comandi esistono e su QUALE delle due macchine si scrivono. Un esercizio
+   che chiede di fare una cosa senza dire con che attrezzi lascia fermi davanti a
+   un cursore che lampeggia. */
+.come { margin: 10px 0 4px; }
+.come h4 {
+    margin: 0 0 6px; font: 600 11px var(--mono); letter-spacing: .12em;
+    color: var(--ink-faint); text-transform: uppercase;
+}
+.come ol { margin: 0; padding-left: 20px; }
+.come li { margin-bottom: 7px; font-size: 13.5px; line-height: 1.5; }
+.come-cmd {
+    display: inline-block; margin-left: 6px;
+    background: var(--screen); color: #b9e8f0;
+    border: 1px solid var(--panel-edge); border-radius: 4px;
+    padding: 1px 7px; font: 12.5px var(--mono);
+}
+/* Su quale macchina si scrive: la pastiglia usa gli stessi due colori dei riquadri,
+   cosi' l'occhio la collega senza doverla leggere. */
+.come .dove {
+    display: inline-block; margin-right: 7px; padding: 0 6px;
+    border-radius: 3px; font: 600 10.5px var(--mono); letter-spacing: .06em;
+    text-transform: uppercase; vertical-align: 1px;
+}
+.come .dove-pc     { background: #10323b; color: var(--phosphor); border: 1px solid #1d4d5c; }
+.come .dove-server { background: #33290f; color: var(--amber);    border: 1px solid #4a3a22; }
+.come-nota {
+    margin: 8px 0 0; padding: 7px 10px; font-size: 13px; color: var(--ink-soft);
+    background: #1a2029; border-left: 2px solid var(--amber); border-radius: 0 var(--r) var(--r) 0;
+}

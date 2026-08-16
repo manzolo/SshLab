@@ -6,7 +6,7 @@
 # superato senza che nessuno abbia bussato. (Stessa ragione per cui il lab
 # fratello smonta i loop device fra un esercizio e l'altro.)
 rm -f /home/deploy/prova.txt
-rm -rf /home/andrea/.ssh /home/deploy/.ssh
+rm -rf /home/manzolo/.ssh /home/deploy/.ssh
 lab_log_azzera
 mkdir -p "$LAB"
 :

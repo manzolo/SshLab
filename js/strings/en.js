@@ -32,6 +32,7 @@ export default {
     tipoStato: "state",
     tipoRisposta: "answer",
     tipoMetodo: "method",
+    comeSiFa: "How to do it",
     esercizi: "Exercises",
     esercizio: "Exercise {0}",
     verifica: "Check",

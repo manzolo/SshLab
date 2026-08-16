@@ -1,186 +1,154 @@
-# EDU-LINUX · Linux Lab
+# EDU-SSH · SSH Lab
 
-**Learning Linux with a terminal that actually answers.**
-22 chapters, from your first command line to bringing up a server.
+**Learning SSH with two real machines, side by side on the same page.**
+Public and private keys, `ssh-agent`, SHA256 fingerprints — watching what happens on
+both ends of the cable.
 
-👉 **[Try it online](https://manzolo.github.io/LinuxLab/?lang=en)** — nothing to install, no account.
+👉 **[Try it online](https://manzolo.github.io/SshLab/)** — nothing to install, no account.
 
 [Versione italiana](README.md)
 
+![The two machines at work](screenshots/banco.png)
+
 ---
 
-## What it is
+## Why two machines
 
-Open the link and after a few seconds you have **a real Linux kernel inside your browser
-tab**. Not a simulation, not a fake terminal that only answers the expected commands: it is
-Linux, and you can type anything into it. Including breaking it — there is a button that puts
-it back to new in half a second.
+Almost every SSH tutorial has you look at **one** machine. But every single thing you
+need to understand is a relationship **between two**: the private key lives here and the
+public one over there, the fingerprint is shown by the server and remembered by the
+client, the agent answers here a challenge that was born there.
 
-You read on the left, you try on the right. Every chapter has exercises the machine
-**really checks**, by looking at how its filesystem ended up.
+With one machine you learn the syntax. With two you learn the model.
 
-## How the anti-cheat works
+On the left there is `manzolo@pc`, on the right `deploy@server`. They have two addresses,
+two different `~/.ssh`, and a network in between. You can type in both.
 
-In this lab's sibling projects the engine is made of paper, so checking can compare outputs.
-Here the engine is a kernel: there are ten legitimate ways to reach the result. The answer is
-not to check harder, it is to **move the uncertainty into the world**:
+## The first meeting, seen from both sides
 
-> If the initial state is generated from a seed you do not know, the answer cannot be
-> hardcoded — and there is no need to police the method.
+This is the screenshot that sums up the whole course:
 
-The log has a different number of `ERROR` lines every session. The hidden folder has a
-generated name. The five most frequent IPs cannot be typed by hand because you have never
-seen them. In the scripting chapters the check **runs your script on cases you have never
-seen**, and the capstone runs it on a machine reset to its initial state: if you did it all
-by hand, it does not pass.
+![The server's fingerprint, read from both sides](screenshots/handshake.png)
 
-And when you get something wrong we do not say "no": we hand you **a command to look at the
-problem**. After ten exercises you have internalised the reflex that is the trade itself:
-look first, change second.
+On the right the server states its identity with `ssh-keygen -lf`. On the left `ssh`, at
+the first meeting, shows **the same fingerprint** and asks whether you trust it. It is the
+same number read from two ends that had never spoken to each other: that is all there is
+behind `known_hosts`, and it is far easier to grasp by seeing it than by reading about it.
 
-## The programme
+## Not a simulator
 
-| | Chapter | Where |
+It is **real OpenSSH** on **real Linux**, inside the browser tab: the kernel runs emulated
+with [v86](https://github.com/copy/v86), the terminals are [xterm.js](https://xtermjs.org/).
+The keys are keys, the fingerprints are the ones your own machine would give you, and an
+`authorized_keys` line copied from here works outside of here too.
+
+You can also break everything: one button puts both machines back to new in half a second.
+
+### How they manage to be two
+
+They are not two computers, and chapter 1 says so plainly: they are **a single kernel with
+two network namespaces**, joined by a pair of virtual interfaces. The network stacks really
+are two — two addresses, two routing tables, a cable in between — while the disk is shared.
+
+That is exactly what a container is. It is also why there are two *users* (`manzolo` and
+`deploy`): since the disk is the same, different HOMEs are the only way `~/.ssh` is really
+a different file on the other machine.
+
+The practical gain is large: **one emulated CPU instead of two**, one snapshot instead of
+two, and a check that can look inside both hosts without opening a second channel — that
+is, without depending on something the exercise itself might break.
+
+## How an exercise is checked
+
+Not by looking at what you typed, but at **what happened to the machines**.
+
+For “get onto the server without a password” the check opens a real connection with
+`BatchMode=yes` — which fails instead of asking for a password, turning an absence into a
+measurable property — and reads `sshd`'s **log**, which knows the method and fingerprint
+of what it actually accepted.
+
+The anti-cheat comes from the world, not from surveillance: **addresses, names and keys
+change with every exercise**, generated from a seed you do not know. An answer written in
+a chapter cannot be copied, because in your world that number is a different one.
+
+And when a check fails it does not say “no”: it gives you the fact it measured, the reason
+in one sentence, and **a command to go look at the problem**.
+
+## On a narrow screen
+
+Below 1200px the two terminals stack instead of shrinking — columns matter, and a
+fingerprint is 74 characters long. Below 760px they become two tabs, with a dot on the
+hidden one when the other machine prints something:
+
+<img src="screenshots/stretto.png" width="420" alt="The two machines as tabs, on a narrow screen">
+
+## The syllabus
+
+| | Chapter | |
 |---|---|---|
-| 01 | The terminal, what it really is | 🌐 |
-| 02 | Getting around | 🌐 |
-| 03 | Files and folders | 🌐 |
-| 04 | Reading a file | 🌐 |
-| 05 | The filesystem: /etc, /var, /proc | 🌐 |
-| 06 | Permissions and ownership | 🌐 |
-| 07 | Users, groups, sudo | 🌐 |
-| 08 | Pipes and redirection | 🌐 |
-| 09 | Searching: find and grep | 🌐 |
-| 10 | Transforming: sed, awk, sort | 🌐 |
-| 11 | Processes and signals | 🌐 |
-| 12 | Packages | 🌐 |
-| 13 | Disks, mounts, space | 🌐 |
-| 14 | Logs and scheduled work | 🌐 |
-| 15 | Networking basics | 🌐 |
-| 16 | Bash scripts | 🌐 |
-| 17 | systemd | 💻 |
-| 18 | Networking, deeper | 💻 |
-| 19 | Services: nginx and ssh | 💻 |
-| 20 | Firewall and hardening | 💻 |
-| 21 | LVM and RAID | 💻 |
-| 22 | Capstone: bring up a server | 💻 |
+| 01 | Two machines and a cable | ✅ |
+| 02 | The key pair | coming |
+| 03 | The fingerprint | coming |
+| 04 | `authorized_keys`: getting in without a password | coming |
+| 05 | Who signs what | coming |
+| 06 | `known_hosts` and the first time | coming |
+| 07 | “The fingerprint changed” | coming |
+| 08 | Permissions: what `sshd` demands | coming |
+| 09 | The passphrase | coming |
+| 10 | `ssh-agent` | coming |
+| 11 | Too many keys: `IdentitiesOnly` | coming |
+| 12 | Rotating a key without locking yourself out | coming |
 
-🌐 = in the browser, nothing to install · 💻 = in the local lab (Docker)
-
-The **BASE / PRO** switch sets the depth: in BASE you learn what to do, in PRO you find out
-how it works underneath and what breaks. Same pages.
-
-## Why six chapters run locally
-
-Because you cannot fake it. In the browser, the v86 emulator runs a real Linux, but:
-
-- **systemd wants to be PID 1 and wants cgroups**, and v86 starts a shell on a kernel that has
-  neither. On top of that Alpine, the guest system, uses OpenRC and has no systemd at all.
-- **real networking wants a network card**, and the browser machine has none.
-- **LVM and RAID want several block devices.**
-
-Chapters 17-22 have the same anatomy as the others, the same `seed.sh` and `check.sh`, and
-the same `lab check` command. Only the executor changes. And explaining *why* they would not
-work is itself chapter material: the reader learns what systemd actually needs in order to
-exist.
-
-```bash
-git clone https://github.com/manzolo/LinuxLab && cd LinuxLab
-./lab/local/run.sh 17 1          # prepare the lab and the exercise
-docker exec -it linuxlab bash    # get in
-lab check 17 1                   # check
-./lab/local/run.sh cleanup       # when you are done
-```
-
-> ⚠️ Chapters 21 and 22 use a `--privileged` container, and loop devices, LVM volumes and RAID
-> arrays **are global to your computer**: an `lsblk` on the host will show them. That is why
-> everything the lab creates is named `lab-*`, and `cleanup` unmounts and detaches all of it.
-> It is written in the chapter too, because it is something to know rather than hide.
-
-## What this lab does NOT cover
-
-Plainly: boot and bootloaders (GRUB, initramfs), kernel and modules, partitioning real disks,
-virtualisation, containers as a subject of their own, permanent distribution network
-configuration. Those are real, large topics and deserve more than a passing mention.
-
-On mobile the lab is **readable but not practicable**: a terminal needs a real keyboard. The
-site says so rather than letting you try and get frustrated.
-
-## How it is built
-
-Static site, ES modules, zero dependencies, zero build. The machine is
-[v86](https://github.com/copy/v86) (BSD-2) with [xterm.js](https://github.com/xtermjs/xterm.js)
-(MIT) and an Alpine rootfs we build ourselves. All open source, no CDN, no backend.
-
-Two decisions hold up the rest:
-
-- **One snapshot for all 22 chapters.** Cold, from 9p, the kernel takes ~46 seconds; from the
-  snapshot the prompt is there in half a second. One snapshot means one URL, downloaded at the
-  first chapter and a cache hit for the other 21 — and the machine stays *the same* as you
-  move between chapters.
-- **Content does not live inside the image.** It lives in `content/chNN/` and enters at
-  runtime. Changing an exercise is a text commit, not a two-minute rebuild.
-
-The checking channel runs over a **second serial port**, not the visible terminal: the other
-way round, a command injected while you are inside `vi` would destroy your work. Measured:
-during a full check, zero bytes appear on the terminal.
-
-### Measured numbers
-
-| | |
-|---|---|
-| first load | 13.5 MB |
-| compressed snapshot | 10.7 MB |
-| snapshot to prompt | 0.6 s in Chrome |
-| full rootfs | 72 MB / 5400 files (fetched on demand, not at boot) |
+Chapters not yet written still appear in the table of contents, with their goal: a
+declared gap is less unsettling than a hidden one.
 
 ## Running it locally
 
 ```bash
-npm run serve          # http://localhost:8801 — read the chapters, without the terminal
+npm run image     # rootfs + snapshot (needs Docker, zstd, python zstandard) — ~4 min
+npm run serve     # http://localhost:8802
 ```
 
-For the terminal too you must build the image once (Docker, `zstd`, `pip install zstandard`):
-
-```bash
-make -C lab check-tools
-npm run image          # ~4 minutes: rootfs + snapshot
-npm run serve
-```
-
-If the image is missing, the site says so plainly instead of throwing a network error.
+The chapters can be read without the image: without it, only the machines are missing.
 
 ## Tests
 
-```bash
-npm test               # content structure: bilingual, check ids, prerequisites (seconds)
-npm run test:labs      # boots the REAL machine and runs every browser exercise
-npm run test:labs-local # chapters 17-22, in the Debian container
-npm run e2e            # smoke test on headless Chrome
-```
+| command | what it does |
+|---|---|
+| `npm test` | chapter structure, both languages, machine options kept in sync |
+| `npm run test:labs` | boots the **real** machine and runs every exercise on three seeds |
+| `npm run test:consegna` | the hand-in round trip **typed into the terminal**, like a person |
+| `npm run spike` | the architecture proof, with timings |
+| `npm run e2e` | headless Chrome smoke test (needs `npm run serve` running) |
+| `npm run screenshot` | regenerates the images in this README |
 
-`test:labs` runs five assertions on every exercise: the initial state does **not** already
-pass, the reference solution passes **on three different seeds**, and the purpose-written
-cheat **fails**. If those are green, the teaching model holds.
+Every exercise must satisfy the five assertions of the series: the initial state does
+**not** already pass · the reference solution passes **on three different seeds** · the
+purpose-written cheat **fails**.
 
-## Adding a chapter
+## The limits, stated
 
-```bash
-npm run new-chapter -- 23 chapter-name
-```
+- **They are not two computers**: one kernel, two network namespaces, shared disk (see above).
+- On an emulated CPU cryptography costs: an ed25519 key takes ~2 s to generate, a login
+  ~8 s. An RSA-4096 would take minutes, which is why the lab never asks you to generate
+  one — it asks you to **look** at one, and that is exactly why ed25519 is used today.
+- On a phone everything is readable, but practising needs a real keyboard.
+- `lab answer` is the only command that exists solely in here: it is needed where an
+  exercise asks you to *read* something, because reading leaves no trace. Wherever it
+  appears, it is declared as such.
 
-Chapters with `draft: true` are hidden from the table of contents and skipped by the tests:
-you can commit a half-written chapter without breaking anything.
+## Relatives
+
+Part of the **EDU-\*** series by [manzolo](https://github.com/manzolo):
+
+- [EDU-LINUX · Linux Lab](https://github.com/manzolo/LinuxLab) — the shell, 22 chapters with a real kernel
+- [EDU-CRYPTO · Cryptography Playground](https://github.com/manzolo/CryptoSimulator) — the maths under the keys: RSA, Diffie-Hellman, hashing
+- [EDU-NET · Network Simulator](https://github.com/manzolo/NetworkSimulator) — what happens on the wire, packet by packet
+
+EDU-CRYPTO explains *why* a public key works; here you see *how* it is used.
 
 ## Licence
 
-MIT © Andrea Manzi ([manzolo](https://github.com/manzolo)) — see
-[THIRD-PARTY.md](THIRD-PARTY.md) for component and redistributed package licences.
-
-Part of the **EDU-\*** series: [AI Atlas](https://manzolo.github.io/AiAtlas/) ·
-[EDU-SQL](https://manzolo.github.io/SqlSimulator/) ·
-[EDU-NET](https://manzolo.github.io/NetworkSimulator/) ·
-[EDU-GIT](https://manzolo.github.io/GitSimulator/) ·
-[EDU-REGEX](https://manzolo.github.io/RegexSimulator/) ·
-[EDU-CRYPTO](https://manzolo.github.io/CryptoSimulator/) — and the others, under the
-[`edu-simulator`](https://github.com/topics/edu-simulator) topic.
+MIT © Andrea Manzi (manzolo).
+[v86](https://github.com/copy/v86) BSD-2-Clause, [xterm.js](https://xtermjs.org/) MIT —
+see [THIRD-PARTY.md](THIRD-PARTY.md).

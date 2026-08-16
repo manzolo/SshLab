@@ -99,7 +99,7 @@ async function principale() {
         ip netns exec server ip -o -4 addr show veth-srv | awk '{print "srv: " $4}'
         ping -c 1 -W 3 10.10.0.2 >/dev/null 2>&1 && echo "cavo: ok"
         kill -0 "$(cat /run/lab/sshd.pid)" 2>/dev/null && echo "sshd: vivo"
-        getent passwd andrea deploy | cut -d: -f1,6 | tr '\\n' ' '; echo
+        getent passwd manzolo deploy | cut -d: -f1,6 | tr '\\n' ' '; echo
         ls /home/deploy/.ssh/authorized_keys 2>/dev/null && echo "ATTENZIONE: chiave del riscaldamento rimasta" || echo "pulizia: ok (nessuna chiave gia' autorizzata)"
     `, 120000);
     esito("i due host esistono gia' all'avvio", mondo.out.includes("cavo: ok") && mondo.out.includes("sshd: vivo"));
@@ -118,27 +118,27 @@ async function principale() {
 
     // --- lo studente genera la sua chiave e la autorizza -------------------------
     const kg = await passo("lo studente genera la chiave", `
-        rm -rf /home/andrea/.ssh /home/deploy/.ssh
-        su andrea -c "mkdir -p ~/.ssh; chmod 700 ~/.ssh; ssh-keygen -t ed25519 -N '' -C andrea@pc -f ~/.ssh/id_ed25519 -q </dev/null"
-        ssh-keygen -lf /home/andrea/.ssh/id_ed25519.pub
+        rm -rf /home/manzolo/.ssh /home/deploy/.ssh
+        su manzolo -c "mkdir -p ~/.ssh; chmod 700 ~/.ssh; ssh-keygen -t ed25519 -N '' -C manzolo@pc -f ~/.ssh/id_ed25519 -q </dev/null"
+        ssh-keygen -lf /home/manzolo/.ssh/id_ed25519.pub
     `, 180000);
 
     const copia = await passo("ssh-copy-id porta la chiave sul server (via rete, con la password)", `
         install -d -m 700 -o deploy -g deploy /home/deploy/.ssh
-        install -m 600 -o deploy -g deploy /home/andrea/.ssh/id_ed25519.pub /home/deploy/.ssh/authorized_keys
+        install -m 600 -o deploy -g deploy /home/manzolo/.ssh/id_ed25519.pub /home/deploy/.ssh/authorized_keys
         echo "autorizzata:"; ssh-keygen -lf /home/deploy/.ssh/authorized_keys
     `, 180000);
 
     // --- LA MISURA ---------------------------------------------------------------
     const opz = "-n -o BatchMode=yes -o ConnectTimeout=20";
     const l1 = await passo("PRIMO login della sessione",
-        `su andrea -c "ssh ${opz} -o StrictHostKeyChecking=accept-new deploy@10.10.0.2 'id -un; hostname'" </dev/null 2>&1 | tail -3`, 250000);
+        `su manzolo -c "ssh ${opz} -o StrictHostKeyChecking=accept-new deploy@10.10.0.2 'id -un; hostname'" </dev/null 2>&1 | tail -3`, 250000);
     esito("il PRIMO ssh entra", l1.out.includes("deploy"), `${l1.dt.toFixed(1)} s`);
 
-    const l2 = await passo("secondo login", `su andrea -c "ssh ${opz} deploy@10.10.0.2 'id -un'" </dev/null 2>&1 | tail -2`, 250000);
+    const l2 = await passo("secondo login", `su manzolo -c "ssh ${opz} deploy@10.10.0.2 'id -un'" </dev/null 2>&1 | tail -2`, 250000);
     esito("il secondo ssh entra", l2.out.includes("deploy"), `${l2.dt.toFixed(1)} s`);
 
-    const l3 = await passo("terzo login", `su andrea -c "ssh ${opz} deploy@10.10.0.2 'id -un'" </dev/null 2>&1 | tail -2`, 250000);
+    const l3 = await passo("terzo login", `su manzolo -c "ssh ${opz} deploy@10.10.0.2 'id -un'" </dev/null 2>&1 | tail -2`, 250000);
 
     // --- l'invariante che useranno i check ---------------------------------------
     const log = await passo("il testimone nel log del server",
@@ -146,9 +146,9 @@ async function principale() {
     esito("il server registra metodo e impronta", /Accepted publickey/.test(log.out));
 
     const senza = await passo("senza la chiave non si entra", `
-        mv /home/andrea/.ssh/id_ed25519 /tmp/via
-        su andrea -c "ssh ${opz} deploy@10.10.0.2 'id -un'" </dev/null 2>&1 | tail -1
-        mv /tmp/via /home/andrea/.ssh/id_ed25519
+        mv /home/manzolo/.ssh/id_ed25519 /tmp/via
+        su manzolo -c "ssh ${opz} deploy@10.10.0.2 'id -un'" </dev/null 2>&1 | tail -1
+        mv /tmp/via /home/manzolo/.ssh/id_ed25519
     `, 250000);
     // NB: non si puo' cercare l'assenza della parola "deploy" — il messaggio di
     // rifiuto e' "deploy@10.10.0.2: Permission denied" e la contiene. L'invariante

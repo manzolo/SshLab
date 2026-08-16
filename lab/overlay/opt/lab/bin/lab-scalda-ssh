@@ -21,7 +21,7 @@
 set -e
 STATO=/run/lab
 SRV_IP=$(cat "$STATO/srv_ip" 2>/dev/null || echo 10.10.0.2)
-UTENTE_PC=$(cat "$STATO/pc_user" 2>/dev/null || echo andrea)
+UTENTE_PC=$(cat "$STATO/pc_user" 2>/dev/null || echo manzolo)
 UTENTE_SRV=$(cat "$STATO/srv_user" 2>/dev/null || echo deploy)
 SCALDA=/root/.scalda
 

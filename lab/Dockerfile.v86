@@ -33,20 +33,20 @@ RUN apk add --no-cache $(grep -v '^#' /tmp/packages.txt | tr '\n' ' ') && rm /tm
 # La verifica finale non e' pignoleria: se lo shadow non comincia con `$` la
 # password non e' stata scritta, e il guasto si presenterebbe molto piu' avanti
 # come un `Permission denied (publickey)` senza spiegazione.
-RUN adduser -D -s /bin/bash andrea && adduser -D -s /bin/bash deploy && \
-    echo 'andrea:lab' | chpasswd && echo 'deploy:lab' | chpasswd && \
-    addgroup andrea wheel && addgroup deploy wheel && \
+RUN adduser -D -s /bin/bash manzolo && adduser -D -s /bin/bash deploy && \
+    echo 'manzolo:lab' | chpasswd && echo 'deploy:lab' | chpasswd && \
+    addgroup manzolo wheel && addgroup deploy wheel && \
     echo '%wheel ALL=(ALL) NOPASSWD: ALL' > /etc/sudoers.d/lab && chmod 440 /etc/sudoers.d/lab && \
-    for u in andrea deploy; do \
+    for u in manzolo deploy; do \
         getent shadow $u | cut -d: -f2 | grep -q '^\$' || \
             { echo "ATTENZIONE: l'account $u e' rimasto bloccato: per sshd non esisterebbe"; exit 1; }; \
     done
 
-# ttyS0 = il pc (andrea) · ttyS1 = il canale di verifica · ttyS2 = il server (deploy).
+# ttyS0 = il pc (manzolo) · ttyS1 = il canale di verifica · ttyS2 = il server (deploy).
 # Su ttyS1 NON c'e' nessun getty: e' il canale di verifica e deve restare pulito da
 # messaggi del kernel e da login.
 RUN sed -i 's/getty 38400 tty1/agetty --autologin root tty1 linux/' /etc/inittab && \
-    echo 'ttyS0::respawn:/sbin/agetty --autologin andrea -s ttyS0 115200 vt100' >> /etc/inittab && \
+    echo 'ttyS0::respawn:/sbin/agetty --autologin manzolo -s ttyS0 115200 vt100' >> /etc/inittab && \
     echo 'ttyS1::respawn:/opt/lab/bin/labagentd' >> /etc/inittab && \
     echo 'ttyS2::respawn:/opt/lab/bin/lab-tty-server' >> /etc/inittab && \
     echo '::sysinit:/sbin/ip link set lo up' >> /etc/inittab && \
@@ -60,7 +60,7 @@ RUN sed -i 's/getty 38400 tty1/agetty --autologin root tty1 linux/' /etc/inittab
 # ATTENZIONE al file giusto: il servizio OpenRC `hostname` legge
 # /etc/conf.d/hostname (la variabile), NON /etc/hostname. Scrivendo solo il secondo
 # la macchina si presentava ancora come `localhost` — e il prompt del capitolo 1,
-# che promette `andrea@pc`, diceva un'altra cosa alla prima riga.
+# che promette `manzolo@pc`, diceva un'altra cosa alla prima riga.
 # NB: /etc/hosts NON si tocca qui. Durante `docker build` e' un file gestito dal
 # motore e riscriverlo fa fallire la build. Al lab non serve: i due host si
 # chiamano per indirizzo, ed e' anche piu' onesto — la risoluzione dei nomi e'
@@ -95,6 +95,16 @@ RUN apk update && \
 
 COPY overlay/ /
 RUN chmod +x /opt/lab/bin/*
+
+# L'area di servizio del laboratorio. Chi studia e' `manzolo`, non root, e deve
+# poterci depositare le proprie risposte (`lab answer`): senza, il comando falliva
+# con "Permission denied" al primo uso.
+#
+# Ma NON basta aprirla: dentro ci vive anche il seme dell'esercizio, che e' il
+# cuore dell'anti-trucco. Percio' root:wheel 1775 — lo sticky bit (1) fa si' che
+# ognuno possa cancellare solo i propri file. Manzolo crea e riscrive `answer`
+# quanto vuole, e non puo' toccare `seed`, che resta di root.
+RUN mkdir -p /opt/lab/state && chown root:wheel /opt/lab/state && chmod 1775 /opt/lab/state
 
 # Senza questo `apropos` e `man -k` non funzionano: e' materiale del capitolo 01.
 RUN makewhatis /usr/share/man 2>/dev/null || true

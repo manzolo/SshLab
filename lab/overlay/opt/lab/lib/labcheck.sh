@@ -142,7 +142,7 @@ LAB_RUN=/run/lab
 lab_srv_ip()   { cat "$LAB_RUN/srv_ip"   2>/dev/null || echo 10.10.0.2; }
 lab_pc_ip()    { cat "$LAB_RUN/pc_ip"    2>/dev/null || echo 10.10.0.1; }
 lab_srv_user() { cat "$LAB_RUN/srv_user" 2>/dev/null || echo deploy; }
-lab_pc_user()  { cat "$LAB_RUN/pc_user"  2>/dev/null || echo andrea; }
+lab_pc_user()  { cat "$LAB_RUN/pc_user"  2>/dev/null || echo manzolo; }
 
 # lab_srv COMANDO... — esegue sull'host "server"
 lab_srv() { ip netns exec server "$@"; }

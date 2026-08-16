@@ -19,6 +19,16 @@ const OPZIONI = {
     // fragile (richiesta/risposta con timeout), mentre una battuta persa su un terminale
     // la ripara la battuta dopo.
     uart2: true,                       // il terminale del server
+    // v86 cattura mouse e tastiera per la macchina emulata: registra un listener
+    // `wheel` NON passivo su window e chiama preventDefault() su OGNI rotellina
+    // della pagina — con l'effetto che il capitolo non si puo' piu' scorrere.
+    // Qui non servono: le macchine si pilotano dalle seriali, non hanno uno schermo
+    // VGA e nessuno usa la loro tastiera PS/2. Spegnerli restituisce la pagina a chi
+    // legge. E niente speaker: v86 aprirebbe un AudioContext che il browser blocca
+    // finche' non c'e' un gesto dell'utente, per un suono che non useremo mai.
+    disable_mouse: true,
+    disable_keyboard: true,
+    disable_speaker: true,
     bzimage_initrd_from_filesystem: true,
     cmdline: "rw root=host9p rootfstype=9p rootflags=trans=virtio,cache=loose " +
              "modules=virtio_pci tsc=reliable init_on_free=on console=ttyS0",

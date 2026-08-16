@@ -23,12 +23,12 @@ export default {
         { kind: "lead", html: {
             it: `Qui sotto ci sono due terminali. Quello a sinistra, in ciano, è
                  <strong>il tuo computer</strong>: si chiama <code>pc</code> e tu sei
-                 <code>andrea</code>. Quello a destra, in ambra, è <strong>una macchina
+                 <code>manzolo</code>. Quello a destra, in ambra, è <strong>una macchina
                  remota</strong>: si chiama <code>server</code> e lì tu saresti
                  <code>deploy</code>. Hanno due indirizzi diversi e fra loro c'è una rete.
                  Provale: scrivi in tutti e due.`,
             en: `Below there are two terminals. The one on the left, in cyan, is <strong>your
-                 computer</strong>: it is called <code>pc</code> and you are <code>andrea</code>.
+                 computer</strong>: it is called <code>pc</code> and you are <code>manzolo</code>.
                  The one on the right, in amber, is <strong>a remote machine</strong>: it is called
                  <code>server</code> and there you would be <code>deploy</code>. They have two
                  different addresses and there is a network between them. Try them: type in both.` } },
@@ -60,8 +60,8 @@ export default {
               en: "<strong>“Connection refused” is not “Connection timed out”.</strong> The first means somebody was there and said no: the machine is alive, but nobody is listening on that port. The second means nobody answered at all: machine off, wrong address, or a firewall silently dropping packets. Two different diagnoses, confused for years." },
             { it: "<strong>Dopo <code>ssh</code>, il terminale di sinistra non è più il pc.</strong> È sempre la stessa finestra, ma i comandi che scrivi ora li esegue il server. Il prompt te lo dice — ed è l'unica cosa che te lo dice. Chi non ci fa caso finisce per cancellare file sulla macchina sbagliata.",
               en: "<strong>After <code>ssh</code>, the left terminal is no longer the pc.</strong> Same window, but the commands you type now run on the server. The prompt tells you — and it is the only thing that does. People who miss it end up deleting files on the wrong machine." },
-            { it: "<strong>Non confondere l'utente con la macchina.</strong> <code>andrea</code> esiste sul pc, <code>deploy</code> sul server: <code>ssh 10.10.0.2</code> senza dire chi sei prova a entrare come <code>andrea</code>, e su quel server <code>andrea</code> non c'è.",
-              en: "<strong>Do not confuse the user with the machine.</strong> <code>andrea</code> exists on the pc, <code>deploy</code> on the server: <code>ssh 10.10.0.2</code> without saying who you are tries to log in as <code>andrea</code>, and on that server there is no <code>andrea</code>." },
+            { it: "<strong>Non confondere l'utente con la macchina.</strong> <code>manzolo</code> esiste sul pc, <code>deploy</code> sul server: <code>ssh 10.10.0.2</code> senza dire chi sei prova a entrare come <code>manzolo</code>, e su quel server <code>manzolo</code> non c'è.",
+              en: "<strong>Do not confuse the user with the machine.</strong> <code>manzolo</code> exists on the pc, <code>deploy</code> on the server: <code>ssh 10.10.0.2</code> without saying who you are tries to log in as <code>manzolo</code>, and on that server there is no <code>manzolo</code>." },
         ] },
 
         { kind: "pro", html: {
@@ -73,7 +73,7 @@ export default {
                  <p>Non è una scorciatoia per finta: <strong>è esattamente quello che è un
                  container.</strong> Quando avvii un container Docker, quello che ottieni è
                  questo. E il motivo per cui qui ci sono due <em>utenti</em> diversi,
-                 <code>andrea</code> e <code>deploy</code>, non è cosmetico: siccome il disco è
+                 <code>manzolo</code> e <code>deploy</code>, non è cosmetico: siccome il disco è
                  condiviso, è l'unico modo perché <code>~/.ssh</code> sia davvero un altro file
                  sull'altra macchina. Senza quello, «copiare la chiave sul server» non vorrebbe
                  dire niente.</p>`,
@@ -84,7 +84,7 @@ export default {
                  the processes can see each other.</p>
                  <p>This is not a fake shortcut: <strong>it is exactly what a container is.</strong>
                  When you start a Docker container, this is what you get. And the reason there are
-                 two different <em>users</em> here, <code>andrea</code> and <code>deploy</code>, is
+                 two different <em>users</em> here, <code>manzolo</code> and <code>deploy</code>, is
                  not cosmetic: since the disk is shared, that is the only way <code>~/.ssh</code>
                  is really a different file on the other machine. Without it, “copying the key to
                  the server” would mean nothing.</p>` } },
@@ -112,6 +112,20 @@ export default {
                 it: "Dal terminale del <strong>pc</strong>, scopri l'indirizzo IP del server e consegnalo con <code>lab answer &lt;indirizzo&gt;</code>. Attenzione: non è scritto da nessuna parte sul pc — devi chiederlo alla rete o guardarlo dall'altra parte.",
                 en: "From the <strong>pc</strong> terminal, find the server's IP address and hand it in with <code>lab answer &lt;address&gt;</code>. Careful: it is written nowhere on the pc — you have to ask the network or look from the other side.",
             },
+            come: [
+                { dove: "server", testo: { it: "Chiedi alla macchina remota qual è il suo indirizzo. Scrivi nel terminale di destra:",
+                                           en: "Ask the remote machine what its address is. Type in the right-hand terminal:" },
+                  cmd: "ip -4 -o addr show veth-srv" },
+                { dove: "pc", testo: { it: "Prova che ci arrivi davvero, con l'indirizzo che hai letto:",
+                                       en: "Prove you can actually reach it, using the address you just read:" },
+                  cmd: "ping -c 2 <indirizzo>" },
+                { dove: "pc", testo: { it: "Consegna la risposta:", en: "Hand in the answer:" },
+                  cmd: "lab answer <indirizzo>" },
+            ],
+            nota: {
+                it: "<strong><code>lab answer</code> è l'unico comando che esiste solo qui dentro.</strong> Serve perché questo esercizio chiede di <em>leggere</em> qualcosa, e leggere non lascia tracce: senza consegnarla, il laboratorio non ha modo di sapere se hai trovato il numero o no. Su una macchina vera non esiste niente del genere — l'indirizzo lo leggi e lo usi, e basta. Da qui in poi quasi tutti gli esercizi si verificano da soli guardando cosa hai <em>fatto</em>, e questo comando non servirà più.",
+                en: "<strong><code>lab answer</code> is the only command that exists only in here.</strong> It is needed because this exercise asks you to <em>read</em> something, and reading leaves no trace: without handing it in, the lab has no way of knowing whether you found the number. On a real machine there is no such thing — you read the address and use it. From here on almost every exercise checks itself by looking at what you <em>did</em>, and this command will not come back.",
+            },
             checks: [
                 { id: "indirizzo-giusto",
                   why: { it: "L'indirizzo consegnato non è quello del server.",
@@ -133,6 +147,23 @@ export default {
             brief: {
                 it: "Entra sul server da <code>ssh</code> (la password di <code>deploy</code> è <code>lab</code>) e lascia lì un file <code>~/prova.txt</code> che contenga il nome della macchina su cui stai scrivendo, preso con <code>hostname</code>. Non barare scrivendolo dal pc: il file deve nascere di là.",
                 en: "Get onto the server with <code>ssh</code> (the password for <code>deploy</code> is <code>lab</code>) and leave a file <code>~/prova.txt</code> there containing the name of the machine you are typing on, taken with <code>hostname</code>. No cheating from the pc: the file has to be born over there.",
+            },
+            come: [
+                { dove: "pc", testo: { it: "Apri una sessione sul server. La password di <code>deploy</code> è <code>lab</code> (non si vede mentre la scrivi: è normale).",
+                                       en: "Open a session on the server. The password for <code>deploy</code> is <code>lab</code> (it does not show while you type: that is normal)." },
+                  cmd: "ssh deploy@<indirizzo>" },
+                { dove: "pc", testo: { it: "Guarda il prompt: adesso dice <code>deploy@server</code>. Il terminale è ancora quello di sinistra, ma i comandi li esegue l'altra macchina.",
+                                       en: "Look at the prompt: it now says <code>deploy@server</code>. The terminal is still the left one, but the commands run on the other machine." } },
+                { dove: "pc", testo: { it: "Da dentro la sessione, scrivi il nome della macchina in un file:",
+                                       en: "From inside the session, write the machine's name into a file:" },
+                  cmd: "hostname > ~/prova.txt" },
+                { dove: "pc", testo: { it: "Torna sul tuo computer e controlla che il prompt sia tornato <code>manzolo@pc</code>:",
+                                       en: "Go back to your computer and check the prompt is <code>manzolo@pc</code> again:" },
+                  cmd: "exit" },
+            ],
+            nota: {
+                it: "Qui non c'è niente da consegnare: la verifica guarda il file <em>sul server</em> e il registro di <code>sshd</code>, che sa se qualcuno ha davvero aperto una sessione. È il modo in cui funzionano quasi tutti gli esercizi di questo corso — si misura quello che è successo, non quello che hai digitato.",
+                en: "Nothing to hand in here: the check looks at the file <em>on the server</em> and at <code>sshd</code>'s log, which knows whether anyone really opened a session. That is how nearly every exercise in this course works — it measures what happened, not what you typed.",
             },
             checks: [
                 { id: "file-sul-server",

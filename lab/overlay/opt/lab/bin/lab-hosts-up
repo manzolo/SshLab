@@ -15,7 +15,7 @@ set -e
 
 PC_IP=10.10.0.1
 SRV_IP=10.10.0.2
-UTENTE_PC=andrea
+UTENTE_PC=manzolo
 UTENTE_SRV=deploy
 STATO=/run/lab
 

@@ -39,6 +39,9 @@ export const OPZIONI_MACCHINA = {
     vga_memory_size: 2 * 1024 * 1024,
     uart1: true,
     uart2: true,                       // il terminale del server (vedi js/lab/machine.js)
+    disable_mouse: true,               // e con loro la rotellina resta alla pagina
+    disable_keyboard: true,
+    disable_speaker: true,
     bzimage_initrd_from_filesystem: true,
     cmdline: "rw root=host9p rootfstype=9p rootflags=trans=virtio,cache=loose " +
              "modules=virtio_pci tsc=reliable init_on_free=on console=ttyS0",

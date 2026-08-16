@@ -77,6 +77,7 @@ async function apri(cap, es, box) {
     const corpo = box.querySelector(".es-corpo");
     corpo.replaceChildren();
     corpo.append(el("p", "es-brief", tr(es.brief)));
+    corpo.append(costruisciComeSiFa(es));
 
     // Nei capitoli locali non c'e' una macchina da interrogare: l'esercizio si fa
     // nel container, e la verifica la esegue `lab check`. Il pannello lo dice invece
@@ -154,7 +155,7 @@ async function apri(cap, es, box) {
     // quello del server sul suo — chiedendolo dentro il namespace giusto.
     const mostraContenuto = async () => {
         try {
-            const pc = await shell('ls -a "$LAB" /home/andrea/.ssh 2>/dev/null | tail -n +2');
+            const pc = await shell('ls -a "$LAB" /home/manzolo/.ssh 2>/dev/null | tail -n +2');
             scriviBlocco(UART.pc, pc.out?.trim() || "(niente ancora)");
             const srv = await shell('ls -a /home/deploy/.ssh 2>/dev/null | tail -n +2');
             scriviBlocco(UART.server, srv.out?.trim() || "(niente ancora)");
@@ -241,6 +242,44 @@ function disegnaVerdetto(cap, es, v, box) {
 }
 
 // Suggerimenti progressivi: si aprono uno alla volta, l'ultimo e' la soluzione.
+/** "Come si fa": i passi dell'esercizio, con i comandi, SEMPRE visibili.
+ *
+ *  Non e' un suggerimento — quelli restano a scomparsa, e servono a chi si e'
+ *  incagliato. Questo e' il minimo per poter cominciare: quali comandi esistono e
+ *  su quale delle due macchine si scrivono. Senza, l'esercizio chiede di fare una
+ *  cosa senza dire con quali attrezzi, e chi non conosce gia' la risposta resta
+ *  fermo davanti a un cursore che lampeggia.
+ *
+ *  Ogni passo dichiara la macchina (`dove`), perche' in un lab a due host "su quale
+ *  scrivo" e' meta' della domanda. */
+function costruisciComeSiFa(es) {
+    const box = el("div", "come");
+    if (!es.come?.length) return box;
+    box.append(el("h4", null, t("comeSiFa")));
+    const ol = el("ol");
+    for (const passo of es.come) {
+        const li = el("li");
+        if (passo.dove) {
+            const tag = el("span", `dove dove-${passo.dove}`, passo.dove);
+            li.append(tag);
+        }
+        li.insertAdjacentHTML("beforeend", tr(passo.testo));
+        if (passo.cmd) {
+            // textContent, non innerHTML: i comandi contengono segnaposto come
+            // `<indirizzo>`, che come HTML sarebbero un tag sconosciuto e
+            // sparirebbero. A video restava `lab answer` — cioe' l'istruzione senza
+            // la cosa da scrivere, che e' peggio di nessuna istruzione.
+            const c = el("code", "come-cmd");
+            c.textContent = passo.cmd;
+            li.append(c);
+        }
+        ol.append(li);
+    }
+    box.append(ol);
+    if (es.nota) box.append(el("p", "come-nota", tr(es.nota)));
+    return box;
+}
+
 function costruisciAiuti(es) {
     const box = el("div", "aiuto");
     let mostrati = 0;

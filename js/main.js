@@ -160,8 +160,17 @@ async function riseminaEsercizioCorrente() {
         creaTerminale($("terminaleServer"), UART.server);
         preparaBanco();
         await attendiAgente();
-        await aggiornaIndirizzi();
         macchinaPronta(true);
+        // Gli indirizzi NON si leggono qui. Appena si apre un esercizio il suo seed
+        // rimescola la rete, e mostrarli adesso vorrebbe dire scriverli due volte:
+        // prima quelli dello snapshot, poi — un paio di secondi dopo, sotto gli occhi
+        // di chi guarda — quelli veri. Un numero che cambia da solo sembra un guasto.
+        // Quindi restano i puntini finche' il mondo non e' quello definitivo, e ci
+        // pensa `prepara()` in ui/exercises.js.
+        //
+        // Rete di sicurezza: se il capitolo non ha esercizi da seminare, nessuno li
+        // scriverebbe mai. Dopo qualche secondo li leggiamo comunque.
+        setTimeout(() => { if ($("ipPc").textContent === "…") aggiornaIndirizzi(); }, 5000);
         await vaiA(idCorrente, false);   // ridisegna gli esercizi ora che la macchina c'e'
     } catch (e) {
         stato.className = "lab-stato errore";
