@@ -60,6 +60,14 @@ run_lab() { # run_lab <script>
         sh -c ". $LIB; . '$1'" 2>&1
 }
 
+# Registra lo stato lecito costruito dal seed. Alcuni esercizi cambiano davvero
+# sshd_config (per esempio MaxAuthTries): la baseline va presa dopo quel cambio,
+# non fissata una volta per tutte al boot.
+registra_sshd_config() {
+    sha256sum /etc/ssh/sshd_config.lab 2>/dev/null | awk '{print $1}' \
+        > "$STATE/sshd_config.fp"
+}
+
 printf '{"ev":"ready","v":1}\n' > "$DEV"
 
 while IFS= read -r line; do
@@ -89,6 +97,7 @@ while IFS= read -r line; do
             printf '%s' "$2" > "$STATE/seed"
             out=$(run_lab "/opt/lab/$1/seed.sh")
             rc=$?
+            [ "$rc" -ne 0 ] || registra_sshd_config
             # Il seed gira come root, ma l'area di lavoro e' di `manzolo`: senza
             # questo, chi studia si trova una cartella sua piena di file di root e
             # non ci puo' scrivere. Il messaggio sarebbe "Permission denied" su un
@@ -109,7 +118,10 @@ while IFS= read -r line; do
         reset)
             mkdir -p "$LAB"; find "$LAB" -mindepth 1 -maxdepth 1 -exec rm -rf {} + 2>/dev/null
             rm -f "$STATE/answer"
-            out=$(run_lab "/opt/lab/$1/seed.sh"); reply "$id" $? "$out"
+            out=$(run_lab "/opt/lab/$1/seed.sh")
+            rc=$?
+            [ "$rc" -ne 0 ] || registra_sshd_config
+            reply "$id" $rc "$out"
             ;;
         write)
             p=$1; m=$2; mkdir -p "$(dirname "$p")"

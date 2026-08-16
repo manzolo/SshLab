@@ -1,6 +1,7 @@
 # BACKLOG — i capitoli 2…12
 
-Stato al 2026-08-16: **il motore è finito e il capitolo 1 è in piedi.** Manca il corso.
+Stato al 2026-08-16: **il motore e l'infrastruttura I1-I4 sono finiti; il capitolo 1
+è in piedi.** Mancano i capitoli 2-12.
 
 Questo file è scritto per essere aperto da un agente e lavorato un capitolo per volta.
 Non è un elenco di titoli: per ogni capitolo c'è **l'invariante misurabile**, che è la
@@ -49,12 +50,13 @@ corrispondono uno a uno: lo verifica `npm test`.
 
 ---
 
-## Prima dei capitoli: quattro lavori di infrastruttura
+## Prima dei capitoli: quattro lavori di infrastruttura (completati)
 
-Nessuno dei capitoli 3, 6, 7, 9, 10, 11 si può scrivere bene senza I1 e I2. Vanno
-fatti per primi, in un commit loro.
+Completati il 2026-08-16 e provati dentro la VM vera da `tests/infrastruttura.sh`,
+che `npm run test:labs` esegue prima dei capitoli. Restano qui come contratto dei
+capitoli che li usano e per evitare che una build futura li disfaccia.
 
-### I1 · Il pool di host key (serve a ch06 e ch07)
+### I1 · Il pool di host key (completato; serve a ch06 e ch07)
 
 Il capitolo sulle impronte ha bisogno che **l'impronta del server cambi da un mondo
 all'altro**, altrimenti la risposta si cabla nel testo. Generarla a runtime costa
@@ -68,7 +70,7 @@ tempo su CPU emulata e — peggio — entropia.
   `/run/lab/entra-server`. Riavviarlo con il solo `ip netns exec` rimette in piedi
   il bug del prompt `deploy@pc`.
 
-### I2 · Il pool di chiavi utente (serve a ch03, ch09, ch11)
+### I2 · Il pool di chiavi utente (completato; serve a ch03, ch09, ch11)
 
 `ssh-keygen` a runtime va benissimo quando **è la lezione** (ch02, ch12). Quando
 invece servono sei chiavi in un colpo solo per riempire l'agent, o quattro esche fra
@@ -80,7 +82,7 @@ cui riconoscere la propria, generarle costa decine di secondi di attesa muta.
 - Peso: ~40 file da poche centinaia di byte. Sotto la soglia dei 25 MB dello snapshot
   (`lab/build-state.mjs`) non si sposta niente, ma **va rimisurato dopo I4**.
 
-### I3 · Gli helper nuovi in `labcheck.sh`
+### I3 · Gli helper nuovi in `labcheck.sh` (completato)
 
 Da aggiungere una volta sola, con lo stesso stile documentato di quelli che ci sono:
 
@@ -95,14 +97,20 @@ Da aggiungere una volta sola, con lo stesso stile documentato di quelli che ci s
 | `lab_modo FILE` | ch08 | `stat -c %a`, con un fatto leggibile |
 | `lab_sshd_config_intatto` | ch08 | impronta del file di configurazione: senza, il modo più comodo di superare il capitolo dei permessi è spegnere `StrictModes` |
 
-### I4 · Dimagrire l'immagine (residui del lab fratello)
+### I4 · Dimagrire l'immagine (completato)
 
 `lab/Dockerfile.v86` porta ancora roba che serviva a LinuxLab e qui non serve a
 nessuno. Toglierla fa spazio ai due pool e accorcia la build:
 
 - il magazzino `apk` offline (`/opt/repo`, `htop ncdu figlet`) — era il capitolo 12 *di là*;
-- `makewhatis` e i pacchetti `-doc` dei manuali — erano il capitolo 1 *di là*;
-- l'intestazione del file dice ancora «EDU-LINUX · Linux Lab».
+- `makewhatis`, i manuali generici e i relativi pacchetti `-doc` — erano il
+  capitolo 1 *di là*. Restano intenzionalmente `mandoc` e `openssh-doc`: in un
+  corso SSH, `man ssh_config` e `man sshd_config` sono strumenti didattici;
+- l'intestazione del file, che diceva ancora «EDU-LINUX · Linux Lab».
+
+Misura prima/dopo: rootfs piatto da **77 MB / 5.444 file / 153 pacchetti** a
+**64 MB / 3.751 file / 143 pacchetti**, compresi i manuali OpenSSH. Lo snapshot
+resta **16,6 MB**, sotto il tetto di 25 MB.
 
 ---
 

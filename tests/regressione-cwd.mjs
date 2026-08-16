@@ -21,7 +21,9 @@ const ROOT = path.join(path.dirname(url.fileURLToPath(import.meta.url)), "..");
 const { V86 } = await import(path.join(ROOT, "vendor/v86/libv86.mjs"));
 
 const em = new V86({
-    memory_size: 128 * 1024 * 1024, vga_memory_size: 2 * 1024 * 1024, uart1: true,
+    memory_size: 128 * 1024 * 1024, vga_memory_size: 2 * 1024 * 1024,
+    uart1: true, uart2: true,
+    disable_mouse: true, disable_keyboard: true, disable_speaker: true,
     bzimage_initrd_from_filesystem: true,
     cmdline: "rw root=host9p rootfstype=9p rootflags=trans=virtio,cache=loose " +
              "modules=virtio_pci tsc=reliable init_on_free=on console=ttyS0",
@@ -73,7 +75,7 @@ console.log("\nregressione: la shell non resta orfana quando cambia esercizio\n"
 // 1) l'utente lavora nella sua cartella, e poi scende in una sottocartella
 await digita('cd ~/lab && mkdir -p sotto/ancora && cd sotto/ancora && pwd');
 let out = await digita('pwd');
-out.includes("/root/lab/sotto/ancora") ? ok("l'utente è dentro ~/lab/sotto/ancora")
+out.includes("/home/manzolo/lab/sotto/ancora") ? ok("l'utente è dentro ~/lab/sotto/ancora")
                                         : ko(`cwd inattesa: ${out.replace(/\n/g, " ")}`);
 
 // 2) intanto il sito prepara un altro esercizio: il mondo viene svuotato
@@ -95,7 +97,7 @@ if (/cannot open directory|No such file or directory/.test(out)) {
 }
 
 out = await digita("pwd");
-/\/root\/lab/.test(out) ? ok(`la shell è stata riportata a casa: ${out.match(/\/root\/lab\S*/)?.[0]}`)
+/\/home\/manzolo\/lab/.test(out) ? ok(`la shell è stata riportata a casa: ${out.match(/\/home\/manzolo\/lab\S*/)?.[0]}`)
                         : ko(`cwd non recuperata: ${out.replace(/\n/g, " ").slice(0, 120)}`);
 
 // 4) e il mondo nuovo è davvero lì

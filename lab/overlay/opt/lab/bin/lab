@@ -2,8 +2,7 @@
 # lab — la CLI che l'utente ha in mano.
 #
 # Nel browser serve soprattutto per `lab answer` (gli esercizi di sola lettura);
-# nel laboratorio locale e' anche il modo di far partire e verificare gli esercizi
-# dei capitoli 17-22. Stesso comando, stessi script di verifica, due runtime.
+# puo' anche preparare e verificare gli script gia' caricati nella macchina.
 
 set -u
 LIB=/opt/lab/lib/labcheck.sh
@@ -13,12 +12,12 @@ mkdir -p "$STATE"
 
 uso() {
     cat <<'EOF'
-lab — laboratorio di EDU-LINUX
+lab — laboratorio di EDU-SSH
 
   lab answer            consegna una risposta letta da stdin
                         es:  grep -c ERROR app.log | lab answer
   lab answer 42         consegna una risposta scritta a mano
-  lab start CH EX       prepara l'esercizio (laboratorio locale)
+  lab start CH EX       prepara un esercizio gia' caricato
   lab check [CH EX]     verifica l'esercizio
   lab reset             ricomincia da capo, stesso mondo
   lab seed              mostra il seme del mondo attuale
@@ -31,6 +30,11 @@ esegui() { # esegui <dir> <script>
     [ -f "/opt/lab/$1/$2" ] || { echo "esercizio non disponibile qui: $1"; exit 2; }
     EDU_SEED="$(cat "$STATE/seed" 2>/dev/null || echo 1)" LAB="$LAB" \
         sh -c ". $LIB; . '/opt/lab/$1/$2'"
+}
+
+registra_sshd_config() {
+    sha256sum /etc/ssh/sshd_config.lab 2>/dev/null | awk '{print $1}' \
+        > "$STATE/sshd_config.fp"
 }
 
 case "${1:-}" in
@@ -69,7 +73,8 @@ case "${1:-}" in
         printf '%s' "$d" > "$STATE/current"
         [ -f "$STATE/seed" ] || date +%s > "$STATE/seed"
         rm -rf "$LAB"; mkdir -p "$LAB"; rm -f "$STATE/answer"
-        esegui "$d" seed.sh
+        esegui "$d" seed.sh || exit $?
+        registra_sshd_config
         echo "pronto. La tua area di lavoro e' $LAB"
         ;;
     check)
@@ -84,7 +89,9 @@ case "${1:-}" in
     reset)
         d="$(corrente)"; [ -n "$d" ] || { echo "nessun esercizio in corso"; exit 1; }
         rm -rf "$LAB"; mkdir -p "$LAB"; rm -f "$STATE/answer"
-        esegui "$d" seed.sh; echo "ricominciato (stesso mondo)"
+        esegui "$d" seed.sh || exit $?
+        registra_sshd_config
+        echo "ricominciato (stesso mondo)"
         ;;
     seed) cat "$STATE/seed" 2>/dev/null || echo "(nessun seme)" ;;
     *) uso ;;

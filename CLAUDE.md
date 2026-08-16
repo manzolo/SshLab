@@ -45,12 +45,13 @@ Serve un server statico: i moduli ES non si caricano da `file://`. `images/` è 
 
 - `js/lab/machine.js` — la VM. Le opzioni devono coincidere **esattamente** con
   `lab/build-state.mjs` e con i test: v86 ripristina uno stato solo con le stesse opzioni.
-  Le confronta `tests/opzioni.test.js` su tutti e cinque i file che le dichiarano.
+  Le confronta `tests/opzioni.test.js` su tutti e nove i file che le dichiarano.
 - `js/lab/terminal.js` — i due xterm, uno per seriale. I byte della tastiera passano da una
   **coda** (8 byte ogni 4 ms): la UART ha 16 byte di FIFO e nessun controllo di flusso.
 - `js/lab/agent.js` — il canale di verifica su ttyS1, protocollo a righe JSON.
 - `lab/overlay/opt/lab/bin/lab-hosts-up` — costruisce i due host e crea
   **`/run/lab/entra-server`**, l'unico modo di entrare nel server.
+- `lab/overlay/opt/lab/bin/lab-sshd-riavvia` — riavvia sshd dentro entrambi i namespace.
 - `lab/overlay/opt/lab/lib/labcheck.sh` — helper di verifica, fra cui `lab_srv`,
   `lab_login_riuscito` e `lab_sshd_dice`.
 - `content/chNN/chapter.js` + `content/chNN/eN/{seed,check,solution,cheat}.sh`.
@@ -81,9 +82,8 @@ condividono l'origine, quindi il prefisso è l'unica cosa che tiene separati i p
 
 **Il lavoro che resta sta in [`BACKLOG.md`](BACKLOG.md)**: i capitoli 2…12 con, per ciascuno,
 l'invariante misurabile di ogni esercizio — che è la sola parte difficile. I testi si
-riscrivono; un check sbagliato insegna una cosa falsa. Prima dei capitoli ci sono quattro
-lavori di infrastruttura (i due pool di chiavi, gli helper nuovi, il dimagrimento
-dell'immagine): senza i primi due, metà dei capitoli non si può scrivere bene.
+riscrivono; un check sbagliato insegna una cosa falsa. I quattro lavori di infrastruttura
+che precedevano i capitoli sono completati e provati nella VM vera.
 
 ```bash
 npm run new-chapter -- 2 chiavi
@@ -101,14 +101,16 @@ l'unica cosa che serve perché la navigazione dica il vero.
 | comando | cosa fa | quanto dura |
 |---|---|---|
 | `npm test` | struttura, bilinguismo, opzioni della macchina coerenti | secondi |
-| `npm run test:labs` | avvia la VERA macchina, ogni esercizio su tre semi | minuti |
+| `npm run test:labs` | prova I1-I4 nella VERA macchina, poi ogni esercizio su tre semi | minuti |
 | `npm run test:consegna` | il giro della consegna **digitando nel terminale** | ~1 min |
+| `npm run test:cwd` | cambiando esercizio la shell non resta in una cartella cancellata | ~1 min |
 | `npm run test:identita` | dopo un `ssh` il prompt dice `deploy@server` | ~2 min |
 | `npm run test:tastiera` | quello che scrivi è quello che arriva | ~2 min |
+| `npm run test:regressione` | esegue insieme le quattro regressioni precedenti | ~3 min |
 | `npm run e2e` | smoke test su Chrome headless | ~1 min |
 | `npm run spike` | la prova dell'architettura, con i tempi | ~1 min |
 
-I tre `test:*` in mezzo esistono per una ragione sola: **fanno il giro come lo fa una
+I quattro test di regressione esistono per una ragione sola: **fanno il giro come lo fa una
 persona**, digitando nel terminale, invece di passare dal canale di servizio. Tutti i difetti
 trovati usando il lab erano invisibili agli altri test, perché gli altri test non leggono, non
 scorrono e sanno già la risposta.

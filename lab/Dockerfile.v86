@@ -1,4 +1,4 @@
-# EDU-LINUX · Linux Lab — sistema ospite del browser.
+# EDU-SSH · SSH Lab — sistema ospite del browser.
 #
 # v86 emula x86 a 32 bit: Debian e Ubuntu moderni non sono un'opzione (i386 abbandonato),
 # Alpine x86 si'. Alpine nasce con BusyBox e musl, quindi i comandi GNU veri si installano
@@ -12,6 +12,31 @@ ENV KERNEL=virt
 
 COPY packages.txt /tmp/packages.txt
 RUN apk add --no-cache $(grep -v '^#' /tmp/packages.txt | tr '\n' ' ') && rm /tmp/packages.txt
+
+# Le chiavi che servono a costruire i mondi variabili nascono qui, sulla CPU
+# reale della build. Generarle dentro v86 aggiungerebbe decine di secondi di
+# attesa muta a esercizi in cui la generazione non e' la lezione.
+#
+# Nomi e posizione sono un contratto dei seed: le host key sono coppie complete
+# in una cartella ciascuna; le chiavi utente sono NN e NN.pub. I commenti rendono
+# riconoscibili le righe senza essere usati dai check, che confrontano impronte.
+RUN set -eu; \
+    mkdir -p /opt/lab/hostkeys /opt/lab/keys/ed25519 /opt/lab/keys/rsa; \
+    for n in $(seq 1 8); do \
+        i=$(printf '%02d' "$n"); d="/opt/lab/hostkeys/$i"; mkdir -p "$d"; \
+        ssh-keygen -q -t ed25519 -N '' -C "server-$i@sshlab" \
+            -f "$d/ssh_host_ed25519_key" </dev/null; \
+    done; \
+    for n in $(seq 1 16); do \
+        i=$(printf '%02d' "$n"); \
+        ssh-keygen -q -t ed25519 -N '' -C "chiave-$i@sshlab" \
+            -f "/opt/lab/keys/ed25519/$i" </dev/null; \
+    done; \
+    for n in $(seq 1 2); do \
+        i=$(printf '%02d' "$n"); \
+        ssh-keygen -q -t rsa -b 4096 -N '' -C "rsa-$i@sshlab" \
+            -f "/opt/lab/keys/rsa/$i" </dev/null; \
+    done
 
 # Console dell'utente su ttyS0. NESSUN getty su ttyS1: e' il canale di verifica,
 # e deve restare pulito da messaggi del kernel e da login.
@@ -77,22 +102,6 @@ RUN sed -i 's/getty 38400 tty1/agetty --autologin root tty1 linux/' /etc/inittab
 RUN usermod -s /bin/bash root && \
     getent passwd root | grep -q ':/bin/bash$' || { echo "la shell di root non e' bash"; exit 1; }
 
-# Capitolo 12 — il gestore di pacchetti deve funzionare DAVVERO, ma in v86 non c'e' rete.
-# Soluzione onesta: un magazzino locale su disco con qualche pacchetto vero e le sue
-# dipendenze. `apk add htop` installa sul serio, offline. Il capitolo dice come stanno
-# le cose: su una macchina vera il magazzino sta in rete, il resto e' identico.
-# Nessun `|| true` qui: se il magazzino non si costruisce, il capitolo 12 mente, e
-# preferisco che la build fallisca. (Serve `apk update` prima: `apk add --no-cache`
-# non lascia l'indice sul disco, e senza indice `apk fetch` non trova niente.)
-# Il repository va nella sottocartella dell'architettura: apk cerca <repo>/<arch>/APKINDEX.
-RUN apk update && \
-    ARCH="$(apk --print-arch)" && mkdir -p "/opt/repo/$ARCH" && \
-    apk fetch --recursive --output "/opt/repo/$ARCH" htop ncdu figlet && \
-    apk index -o "/opt/repo/$ARCH/APKINDEX.tar.gz" "/opt/repo/$ARCH"/*.apk && \
-    printf '/opt/repo\n' > /etc/apk/repositories && \
-    apk update --allow-untrusted && \
-    apk list --available 2>/dev/null | head -3
-
 COPY overlay/ /
 RUN chmod +x /opt/lab/bin/*
 
@@ -105,9 +114,6 @@ RUN chmod +x /opt/lab/bin/*
 # ognuno possa cancellare solo i propri file. Manzolo crea e riscrive `answer`
 # quanto vuole, e non puo' toccare `seed`, che resta di root.
 RUN mkdir -p /opt/lab/state && chown root:wheel /opt/lab/state && chmod 1775 /opt/lab/state
-
-# Senza questo `apropos` e `man -k` non funzionano: e' materiale del capitolo 01.
-RUN makewhatis /usr/share/man 2>/dev/null || true
 
 RUN for i in devfs dmesg mdev hwdrivers; do rc-update add $i sysinit; done && \
     for i in hwclock modules sysctl hostname bootmisc; do rc-update add $i boot; done && \

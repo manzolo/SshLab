@@ -13,12 +13,6 @@ util-linux procps-ng psmisc file tar gzip xz less
 # --- editor ed esplorazione ---
 vim nano tree ncurses-terminfo-base
 
-# --- manuali. ATTENZIONE: su Alpine sono sottopacchetti -doc separati.
-#     Senza questi `man ls` non esiste e il capitolo 01 muore.
-mandoc mandoc-apropos man-pages
-coreutils-doc findutils-doc grep-doc sed-doc gawk-doc
-util-linux-doc procps-ng-doc bash-doc less-doc
-
 # --- utenti, permessi, testo strutturato ---
 shadow sudo acl attr jq bc
 
@@ -31,3 +25,8 @@ iproute2 curl e2fsprogs busybox-extras
 #     ne' una coppia di chiavi da generare ne' un'impronta da leggere — cioe' meta'
 #     del corso. openssh-sftp-server serve a scp/sftp del capstone.
 openssh-client openssh-server openssh-keygen openssh-sftp-server
+
+# --- manuali strettamente didattici ---
+# Il corso deve lasciare l'abitudine di consultare la fonte locale: teniamo il
+# lettore e le sole pagine OpenSSH, senza ripristinare la documentazione generica.
+mandoc openssh-doc

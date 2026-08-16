@@ -1,6 +1,6 @@
 # STATO DEL LAVORO — leggi questo prima di toccare qualsiasi cosa
 
-Aggiornato al **2026-08-16**, commit `3f2d3b3`. Otto commit in tutto, `main` pulito.
+Aggiornato al **2026-08-16**, dopo il completamento dell'infrastruttura I1-I4.
 
 Questo file esiste per una ragione sola: **evitarti di riscoprire l'acqua calda.**
 Il motore di questo lab è finito e misurato, e ci sono dentro una decina di guasti già
@@ -21,7 +21,7 @@ Sito statico, bilingue IT/EN, **zero dipendenze a runtime, zero build del sito**
 destinato a GitHub Pages. Fa parte della collana EDU-\* di manzolo e nasce da
 **LinuxLab** (stesso motore, copiato al commit `a8dee38` e poi divergente).
 
-Stato: **motore completo e verificato, 1 capitolo su 12 scritto.**
+Stato: **motore e infrastruttura completi e verificati, 1 capitolo su 12 scritto.**
 
 ---
 
@@ -33,17 +33,20 @@ L'immagine del guest **non è nel repo** (`images/` è in `.gitignore`): va cost
 npm run image     # ~4 min. Serve: Docker, zstd, python con il modulo zstandard
 npm run serve     # http://localhost:8802  (i moduli ES non si caricano da file://)
 
-npm test          # ~1 s   — struttura, bilinguismo, opzioni della VM. Atteso: 16/16
+npm test          # ~1 s   — struttura, bilinguismo, opzioni VM. Attesi: 2 file / 16 controlli
 npm run e2e       # ~1 min — Chrome headless sul sito servito. Atteso: tutto verde
-npm run test:labs # ~5 min — la macchina VERA, ogni esercizio su tre semi
+npm run test:labs # ~5 min — infrastruttura vera + ogni esercizio su tre semi
+npm run test:regressione # ~3 min — consegna, CWD, identita' e tastiera dal terminale
 ```
 
-Poi apri il sito e **fai il capitolo 1 a mano, dall'inizio**. Non è una formalità: tutti
-i difetti veri di questo lab sono stati trovati così, e nessuno di essi era visibile ai
-test — perché i test non leggono, non scorrono e sanno già la risposta.
+Il capitolo 1 va rifatto a mano quando cambia il contenuto o l'esperienza utente, non
+dopo ogni modifica all'infrastruttura. Consegna, cambio esercizio, identita' dei due
+terminali e coda della tastiera hanno ora regressioni che digitano come una persona;
+la lettura manuale resta insostituibile prima di accettare un capitolo o una modifica UI.
 
-Al 2026-08-16 erano verdi: `npm test` 16/16 · `e2e` · `test:labs` 14/14 su tre semi ·
-`test:consegna` 5/5 · `test:identita` 4/4 · `test:tastiera` 3/3.
+Al 2026-08-16 sono verdi: `npm test` (2 file, 16 controlli) · `e2e` ·
+`test:labs` 15/15 · `test:consegna` 5/5 · `test:cwd` 5/5 ·
+`test:identita` 4/4 · `test:tastiera` 3/3.
 
 ---
 
@@ -103,7 +106,7 @@ vuoto. Chi apre il lab trova tutto in piedi in mezzo secondo.
 
 | file | cosa fa | cosa NON devi fare |
 |---|---|---|
-| `js/lab/machine.js` | la VM | cambiare un'opzione senza cambiarla **negli altri quattro file** che la dichiarano: v86 ripristina uno stato solo con le stesse opzioni del costruttore. Le confronta `tests/opzioni.test.js` |
+| `js/lab/machine.js` | la VM | cambiare un'opzione senza cambiarla **negli altri otto file** che la dichiarano: v86 ripristina uno stato solo con le stesse opzioni del costruttore. Le confronta `tests/opzioni.test.js` |
 | `js/lab/terminal.js` | i due xterm, uno per seriale | mandare byte senza passare dalla coda (vedi §5.1) |
 | `js/lab/agent.js` | canale di verifica, righe JSON su ttyS1 | —  |
 | `js/lab/runner.js` | seed / check / solve di un esercizio | — |
@@ -114,6 +117,7 @@ vuoto. Chi apre il lab trova tutto in piedi in mezzo secondo.
 | `content/chNN/eN/{seed,check,solution,cheat}.sh` | l'esercizio | ometterne uno |
 | `lab/Dockerfile.v86` | l'immagine del guest | vedi §5.4 e §5.5 |
 | `lab/overlay/opt/lab/bin/lab-hosts-up` | costruisce i due host, crea `/run/lab/entra-server` | vedi §5.3 |
+| `lab/overlay/opt/lab/bin/lab-sshd-riavvia` | riavvia sshd dentro rete e UTS del server | non sostituirlo con il solo `ip netns exec` |
 | `lab/overlay/opt/lab/lib/labcheck.sh` | la libreria dei check | — |
 | `lab/build-state.mjs` | costruisce lo snapshot | — |
 
@@ -258,7 +262,8 @@ corrispondono uno a uno: lo verifica `npm test`.
 `lab_fp` `lab_fp_tutte` · `lab_login_prova` `lab_login_riuscito` · `lab_sshd_dice`
 `lab_log_azzera`.
 
-Gli helper **che ancora mancano** sono elencati in `BACKLOG.md` §I3.
+Gli otto helper aggiunti per i capitoli 5-11 sono elencati in `BACKLOG.md` §I3 e
+provati nella VM vera da `tests/infrastruttura.sh`.
 
 ---
 
@@ -270,9 +275,15 @@ Gli helper **che ancora mancano** sono elencati in `BACKLOG.md` §I3.
 - **Capitolo 1** «Due macchine e un cavo», due esercizi (uno `risposta`, uno `stato`),
   completo IT/EN, con blocchi `hook` `lead` `analogy` `shown` `pitfalls` `pro` `lab` `recap`.
 - Guida «Basi» che si apre alla prima visita, sommario, profondità BASE/PRO, IT/EN.
-- Sette banchi di prova, fra cui tre che **fanno il giro come lo fa una persona**
-  (`test:consegna`, `test:identita`, `test:tastiera`) — esistono perché tutti i difetti
+- Otto banchi di prova, fra cui quattro che **fanno il giro come lo fa una persona**
+  (`test:consegna`, `test:cwd`, `test:identita`, `test:tastiera`) — esistono perché tutti i difetti
   trovati usando il lab erano invisibili agli altri test.
+- Pool a build time: 8 host key ed25519, 16 chiavi utente ed25519 e 2 RSA-4096.
+- Gli otto helper per login fallito, host identity, agent, offerte, modi e integrita'
+  del config; la baseline di `sshd_config` viene registrata dopo ogni seed.
+- Immagine ripulita dai manuali generici e dal repository APK del lab fratello;
+  `mandoc` e `openssh-doc` restano per consultare la documentazione SSH: 64 MB e
+  3.751 file contro 77 MB e 5.444 file; snapshot invariato a 16,6 MB.
 - CI: `.github/workflows/test.yml` e `pages.yml`; l'immagine si ricostruisce solo quando
   cambia l'hash dei file di build (`lab/packages.lock`).
 - README IT + EN, screenshot in `screenshots/`.
@@ -281,10 +292,6 @@ Gli helper **che ancora mancano** sono elencati in `BACKLOG.md` §I3.
 
 - **I capitoli 2…12.** Sono il grosso, e stanno in `BACKLOG.md` con, per ciascuno,
   l'invariante misurabile di ogni esercizio.
-- Prima dei capitoli, **quattro lavori di infrastruttura** (`BACKLOG.md` §I1–I4): i due
-  pool di chiavi generate a build time, otto helper nuovi, e il dimagrimento
-  dell'immagine dai residui di LinuxLab (il magazzino `apk` di `/opt/repo`, `makewhatis`,
-  i pacchetti `-doc`). **Senza i due pool, metà dei capitoli non si può scrivere bene.**
 - La correzione del `\r` (§5.2) da portare su **LinuxLab, che è online**.
 - La consegna: `gh repo create manzolo/SshLab`, Pages, topic `edu-simulator`.
 

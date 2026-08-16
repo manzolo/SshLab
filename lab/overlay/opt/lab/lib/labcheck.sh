@@ -213,6 +213,114 @@ lab_login_riuscito() {
     [ "$ultima" = "$(lab_srv_user)" ]
 }
 
+# lab_login_fallito UTENTE_LOCALE [opzioni] — 0 solo se ssh ha raggiunto il
+# server ed e' stato rifiutato durante l'autenticazione.
+#
+# Non e' la negazione di lab_login_riuscito: host sconosciuto, porta chiusa e
+# timeout sono prove che non si sono potute fare, non login respinti. Trattarli
+# come successi insegnerebbe che rompere la rete equivale a ritirare una chiave.
+lab_login_fallito() {
+    u=$1; shift
+    if out=$(lab_login_prova "$u" "$@"); then rc=0; else rc=$?; fi
+    lab_fact login "$(printf '%s' "$out" | tr '\n' ' ' | cut -c1-76)"
+    [ "$rc" -ne 0 ] || return 1
+    printf '%s\n' "$out" | grep -Eq \
+        'Permission denied|Too many authentication failures'
+}
+
+# lab_hostkey_fp — impronta della chiave con cui sshd si presenta adesso.
+lab_hostkey_fp() { lab_fp /etc/ssh/ssh_host_ed25519_key.pub; }
+
+# lab_known_hosts_fp UTENTE — tutte le impronte annotate da quell'utente.
+# `ssh-keygen -lf` interpreta il formato known_hosts anche quando gli hostname
+# sono hashati; parsare le righe a mano farebbe fallire proprio il caso reale.
+lab_known_hosts_fp() {
+    home=$(getent passwd "$1" 2>/dev/null | cut -d: -f6)
+    [ -n "$home" ] || return 1
+    ssh-keygen -lf "$home/.ssh/known_hosts" 2>/dev/null \
+        | awk '$2 ~ /^(SHA256:|MD5:)/ { print $2 }'
+}
+
+# lab_agent_socket UTENTE — trova un agent vivo appartenente a quell'utente.
+# Il check gira come root in un altro processo e non eredita SSH_AUTH_SOCK. Il
+# nome del socket non basta: un agent terminato puo' aver lasciato resti su disco,
+# quindi si accettano soltanto socket a cui ssh-add riesce davvero a parlare.
+lab_agent_socket() {
+    u=$1
+    home=$(getent passwd "$u" 2>/dev/null | cut -d: -f6)
+    [ -n "$home" ] || return 1
+    vuoto=
+    for s in $(find /tmp /run "$home" -xdev -type s -user "$u" -name 'agent.*' 2>/dev/null); do
+        if lab_come "$u" "SSH_AUTH_SOCK='$s' ssh-add -l >/dev/null"; then rc=0; else rc=$?; fi
+        # ssh-add: 0 con chiavi, 1 se l'agent e' vivo ma vuoto, 2 se non risponde.
+        # Se ce ne sono piu' d'uno si preferisce quello che contiene identita'.
+        if [ "$rc" -eq 0 ]; then
+            printf '%s\n' "$s"
+            return 0
+        fi
+        [ "$rc" -ne 1 ] || vuoto=$s
+    done
+    [ -n "$vuoto" ] || return 1
+    printf '%s\n' "$vuoto"
+    return 0
+}
+
+# lab_agent_impronte UTENTE — le sole impronte delle chiavi caricate.
+lab_agent_impronte() {
+    u=$1
+    s=$(lab_agent_socket "$u") || return 1
+    lab_come "$u" "SSH_AUTH_SOCK='$s' ssh-add -l" \
+        | awk '$2 ~ /^(SHA256:|MD5:)/ { print $2 }'
+}
+
+# lab_offerte UTENTE — quanti tentativi publickey sono falliti nella stessa
+# connessione prima dell'ultimo Accepted. Il parametro identifica l'utente sul
+# pc; nel log il server vede invece utente remoto, IP e porta della connessione.
+# Contare per porta evita di sommare tentativi appartenenti a sessioni vecchie.
+lab_offerte() {
+    id "$1" >/dev/null 2>&1 || return 1
+    remoto=$(lab_srv_user)
+    awk -v remoto="$remoto" '
+        function connessione(s) {
+            sub(/^.* from /, "", s)
+            sub(/ ssh2.*$/, "", s)
+            return s
+        }
+        index($0, "Failed publickey for " remoto " from ") {
+            k = connessione($0)
+            fallite[k]++
+        }
+        index($0, "Accepted publickey for " remoto " from ") {
+            k = connessione($0)
+            ultima = fallite[k] + 0
+            trovata = 1
+        }
+        END {
+            if (!trovata) exit 1
+            print ultima
+        }
+    ' /var/log/messages 2>/dev/null
+}
+
+# lab_modo FILE — modo ottale senza il tipo del file (700, 600, ...).
+# Il check gli da' un nome didattico con lab_fact, per esempio:
+#   modo=$(lab_modo "$HOME/.ssh"); lab_fact modo_ssh "$modo"
+lab_modo() { stat -c '%a' "$1" 2>/dev/null; }
+
+# lab_sshd_config_intatto — confronta il config con l'impronta registrata dopo
+# il seed. La baseline e' di root nell'area sticky del lab: chi studia puo' cambiare
+# sshd_config, ma non puo' spostare il riferimento insieme al bersaglio.
+lab_sshd_config_intatto() {
+    atteso=$(cat "$LAB_STATE/sshd_config.fp" 2>/dev/null)
+    attuale=$(sha256sum /etc/ssh/sshd_config.lab 2>/dev/null | awk '{print $1}')
+    if [ -n "$atteso" ] && [ "$attuale" = "$atteso" ]; then
+        lab_fact sshd_config "intatto ($attuale)"
+        return 0
+    fi
+    lab_fact sshd_config "modificato (${attuale:-(file assente)})"
+    return 1
+}
+
 # lab_sshd_dice PATTERN — l'ultima riga del registro del server che combacia.
 #
 # E' il testimone: sshd scrive "Accepted publickey for deploy ... ED25519

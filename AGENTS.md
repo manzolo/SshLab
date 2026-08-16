@@ -19,15 +19,17 @@ Istruzioni per un agente che lavora in questo repository.
 browser: kernel reale via v86 (WASM), OpenSSH vero dei due lati, xterm.js. Sito statico
 bilingue IT/EN, zero dipendenze a runtime, zero build del sito.
 
-Stato: **motore finito e misurato, 1 capitolo su 12 scritto.**
+Stato: **motore e infrastruttura finiti e misurati, 1 capitolo su 12 scritto.**
 
 ## Prima di cominciare
 
 ```bash
 npm run image     # ~4 min. images/ NON è nel repo. Serve Docker + zstd + python zstandard
 npm run serve     # http://localhost:8802 — i moduli ES non si caricano da file://
-npm test          # atteso 16/16
+npm test          # attesi 2 file / 16 controlli
 npm run e2e       # Chrome headless, atteso tutto verde
+npm run test:labs # infrastruttura vera + ogni esercizio su tre semi
+npm run test:regressione # consegna, CWD, identita' e tastiera dal terminale
 ```
 
 ## Regole non negoziabili
@@ -48,7 +50,7 @@ npm run e2e       # Chrome headless, atteso tutto verde
   e **il `cheat.sh` deve fallire**. Se passa, è il check a essere scritto male.
 - **Onestà sui limiti**: si dichiarano nel testo, non si nascondono. Le due macchine non
   sono due computer, e il capitolo 1 lo dice.
-- **Le opzioni della VM sono duplicate in cinque file** e v86 ripristina uno stato solo
+- **Le opzioni della VM sono duplicate in nove file** e v86 ripristina uno stato solo
   con le stesse opzioni del costruttore: si cambiano tutte insieme. Le confronta
   `tests/opzioni.test.js`.
 - **Zero dipendenze nuove.** Niente npm a runtime, niente CDN, niente build step.

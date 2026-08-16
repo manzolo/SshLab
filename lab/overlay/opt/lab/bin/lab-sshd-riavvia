@@ -1,0 +1,44 @@
+#!/bin/sh
+# Riavvia il solo demone ssh del server. Deve passare da entra-server: le sessioni
+# ereditano da sshd sia la rete sia il nome, e usare soltanto `ip netns exec`
+# farebbe ricomparire il prompt falso deploy@pc.
+
+set -eu
+
+STATO=/run/lab
+PIDFILE=$STATO/sshd.pid
+CONFIG=/etc/ssh/sshd_config.lab
+
+[ -x "$STATO/entra-server" ] || {
+    echo "lab-sshd-riavvia: manca $STATO/entra-server" >&2
+    exit 1
+}
+
+if [ -s "$PIDFILE" ]; then
+    pid=$(cat "$PIDFILE")
+    if kill -0 "$pid" 2>/dev/null; then
+        kill "$pid"
+        n=0
+        while kill -0 "$pid" 2>/dev/null; do
+            n=$((n + 1))
+            [ "$n" -lt 50 ] || {
+                echo "lab-sshd-riavvia: sshd non si e' fermato" >&2
+                exit 1
+            }
+            sleep 0.1
+        done
+    fi
+    rm -f "$PIDFILE"
+fi
+
+# Anche il controllo della configurazione gira nel mondo del server: se in
+# futuro contenesse Match LocalAddress o percorsi relativi, prova cio' che
+# verra' avviato davvero.
+"$STATO/entra-server" /usr/sbin/sshd -t -f "$CONFIG"
+"$STATO/entra-server" /usr/sbin/sshd -f "$CONFIG" -o "PidFile=$PIDFILE"
+
+pid=$(cat "$PIDFILE" 2>/dev/null || true)
+[ -n "$pid" ] && kill -0 "$pid" 2>/dev/null || {
+    echo "lab-sshd-riavvia: sshd non e' ripartito" >&2
+    exit 1
+}

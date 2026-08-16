@@ -77,7 +77,7 @@ for (const cap of capitoliCaricati.filter(c => !c.__errore)) {
         for (const es of cap.exercises || []) {
             const dir = path.join(ROOT, "content", cap.id, es.id);
             assert.ok(fs.existsSync(dir), `${cap.id}.${es.id}: cartella assente`);
-            for (const f of ["seed.sh", "check.sh", "solution.sh"]) {
+            for (const f of ["seed.sh", "check.sh", "solution.sh", "cheat.sh"]) {
                 assert.ok(fs.existsSync(path.join(dir, f)), `${cap.id}.${es.id}: manca ${f}`);
             }
             assert.ok(es.brief, `${cap.id}.${es.id}: manca la consegna`);

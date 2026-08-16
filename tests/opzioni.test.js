@@ -31,8 +31,12 @@ const FILE = [
     "js/lab/machine.js",
     "lab/build-state.mjs",
     "tests/labs.mjs",
-    "tools/spike.mjs",
     "tests/regressione-consegna.mjs",
+    "tests/regressione-cwd.mjs",
+    "tests/regressione-identita.mjs",
+    "tests/regressione-tastiera.mjs",
+    "tools/spike.mjs",
+    "tools/spike-seriali.mjs",
 ];
 
 /** Estrae il valore dichiarato per una chiave, come testo normalizzato. */

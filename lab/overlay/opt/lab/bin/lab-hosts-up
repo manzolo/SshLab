@@ -80,11 +80,15 @@ for u in "$UTENTE_PC" "$UTENTE_SRV"; do
 done
 
 # --- la chiave di identita' del server ----------------------------------------
-# Solo ed25519: su una CPU emulata una RSA costa decine di secondi, e `ssh-keygen -A`
-# ne genererebbe una senza chiedere. Le RSA che servono ai capitoli (il NAS del
-# 2006) vengono da un pool generato a build time, su CPU vera.
-[ -f /etc/ssh/ssh_host_ed25519_key ] || \
-    ssh-keygen -t ed25519 -N '' -f /etc/ssh/ssh_host_ed25519_key -q </dev/null
+# Solo ed25519. Anche la chiave iniziale arriva dal pool generato a build time:
+# non si paga entropia sulla CPU emulata e i capitoli 6 e 7 possono sostituirla
+# con un'altra coppia senza generare niente a runtime.
+if [ ! -f /etc/ssh/ssh_host_ed25519_key ]; then
+    install -m 600 /opt/lab/hostkeys/01/ssh_host_ed25519_key \
+        /etc/ssh/ssh_host_ed25519_key
+    install -m 644 /opt/lab/hostkeys/01/ssh_host_ed25519_key.pub \
+        /etc/ssh/ssh_host_ed25519_key.pub
+fi
 
 cat > /etc/ssh/sshd_config.lab <<'FINE'
 HostKey /etc/ssh/ssh_host_ed25519_key
@@ -96,12 +100,16 @@ PubkeyAuthentication yes
 Subsystem sftp /usr/lib/ssh/sftp-server
 FINE
 
+# La prima impronta del config e' la baseline prima di qualunque esercizio. A
+# ogni seed l'agente la aggiorna DOPO aver costruito il mondo, cosi' anche un
+# esercizio che cambia intenzionalmente MaxAuthTries ha un riferimento corretto.
+sha256sum /etc/ssh/sshd_config.lab | awk '{print $1}' \
+    > /opt/lab/state/sshd_config.fp
+
 # --- sshd, dentro il namespace del server (rete E nome) ------------------------
 # Le sessioni che sshd apre ereditano i suoi namespace: e' avviandolo qui dentro
 # che `ssh deploy@...` finisce su una macchina che si chiama davvero `server`.
-if [ ! -s "$STATO/sshd.pid" ] || ! kill -0 "$(cat "$STATO/sshd.pid")" 2>/dev/null; then
-    "$STATO/entra-server" /usr/sbin/sshd -f /etc/ssh/sshd_config.lab -o "PidFile=$STATO/sshd.pid"
-fi
+/opt/lab/bin/lab-sshd-riavvia
 
 printf '%s' "$SRV_IP"      > "$STATO/srv_ip"
 printf '%s' "$PC_IP"       > "$STATO/pc_ip"

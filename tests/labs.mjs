@@ -85,14 +85,21 @@ async function caricaScript(cap, es, nome) {
     return true;
 }
 
+async function provaInfrastruttura() {
+    const sorgente = fs.readFileSync(path.join(ROOT, "tests", "infrastruttura.sh"), "utf8");
+    await chiedi("write", "/opt/lab/test-infrastruttura.sh", "755", b64(sorgente));
+    const r = await chiedi("sh", "/opt/lab/test-infrastruttura.sh");
+    if (r.ok) ok("I1-I4: pool, helper, namespace e immagine");
+    else ko(`I1-I4: infrastruttura NON valida — ${(r.out || "").replace(/\n/g, " | ").slice(0, 500)}`);
+}
+
 async function provaEsercizio(cap, es) {
     const etichetta = `${cap}.${es}`;
     const dir = `${cap}/${es}`;
 
-    for (const nome of ["seed.sh", "check.sh", "solution.sh"]) {
+    for (const nome of ["seed.sh", "check.sh", "solution.sh", "cheat.sh"]) {
         if (!await caricaScript(cap, es, nome)) { ko(`${etichetta}: manca ${nome}`); return; }
     }
-    const haCheat = await caricaScript(cap, es, "cheat.sh");
 
     // 1 + 2 + 4: su tre semi diversi, lo stato iniziale non passa e la soluzione passa
     for (const seme of SEMI) {
@@ -112,17 +119,15 @@ async function provaEsercizio(cap, es) {
 
     // 3: il barare deve fallire, e deve fallire su un seme DIVERSO da quello in cui
     // e' stato scritto — altrimenti non stiamo provando niente.
-    if (haCheat) {
-        await chiedi("seed", dir, SEMI[1]);
-        await chiedi("write", `/opt/lab/${dir}/solution.sh`, "755",
-                     b64(fs.readFileSync(path.join(ROOT, "content", cap, es, "cheat.sh"), "utf8")));
-        await chiedi("solve", dir);
-        const v = await chiedi("check", dir);
-        if (v.ok) ko(`${etichetta}: il trucco PASSA — l'anti-trucco non tiene`);
-        else ok(`${etichetta}: il trucco fallisce`);
-        // rimetti la soluzione vera, per non inquinare le prove successive
-        await caricaScript(cap, es, "solution.sh");
-    }
+    await chiedi("seed", dir, SEMI[1]);
+    await chiedi("write", `/opt/lab/${dir}/solution.sh`, "755",
+                 b64(fs.readFileSync(path.join(ROOT, "content", cap, es, "cheat.sh"), "utf8")));
+    await chiedi("solve", dir);
+    const v = await chiedi("check", dir);
+    if (v.ok) ko(`${etichetta}: il trucco PASSA — l'anti-trucco non tiene`);
+    else ok(`${etichetta}: il trucco fallisce`);
+    // rimetti la soluzione vera, per non inquinare le prove successive
+    await caricaScript(cap, es, "solution.sh");
 }
 
 // ---------------------------------------------------------------- via
@@ -138,6 +143,7 @@ await new Promise(r => emulatore.add_listener("emulator-loaded", r));
 await dormi(2500);
 const p = await chiedi("ping");
 if (!p.ok) { console.error("la macchina non risponde sul canale di verifica"); process.exit(1); }
+await provaInfrastruttura();
 console.log(`macchina pronta — provo ${capitoli.length} capitoli\n`);
 
 for (const cap of capitoli) {
