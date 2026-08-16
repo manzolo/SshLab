@@ -51,6 +51,17 @@ case "${1:-}" in
             exit 1
         fi
         echo "risposta consegnata: $consegnata"
+        # Se la risposta ha piu' di una parola quasi sempre e' un incidente di
+        # battitura o di incolla — `lab answer lab 10.10.0.2` invece di
+        # `lab answer 10.10.0.2`. La verifica lo direbbe comunque, ma dopo, e con un
+        # `got=` che si somiglia abbastanza da far pensare di aver scritto giusto.
+        # Meglio dirlo qui, mentre si ha ancora in mano il comando.
+        # Si avvisa e basta: la risposta resta quella scritta, perche' indovinare
+        # cosa intendeva l'utente e' peggio che dirgli cosa ha scritto.
+        if [ "$#" -gt 1 ]; then
+            echo "attenzione: hai consegnato $# valori separati da spazio." >&2
+            echo "            se intendevi solo l'ultimo, riscrivi: lab answer $(eval echo \"\$$#\")" >&2
+        fi
         ;;
     start)
         [ $# -eq 3 ] || { uso; exit 1; }

@@ -23,15 +23,21 @@
 
 * { box-sizing: border-box; }
 
-html, body { height: 100%; }
+/* SCORRE LA PAGINA, E BASTA.
+   La versione precedente bloccava l'altezza e teneva tre aree con un overflow
+   ciascuna — capitolo, terminali, esercizi. Il risultato: il capitolo ridotto a una
+   fessura col testo tagliato a meta' riga, gli esercizi tagliati sopra e sotto, e
+   la sensazione che il layout spezzasse tutto. E' lo stesso errore che il lab
+   fratello aveva gia' fatto e documentato; qui era stato reintrodotto dalla porta
+   di servizio, cioe' impilando invece di affiancare ma tenendo le altezze bloccate.
+   Una sola area di scorrimento: quella del browser. */
+html, body { height: auto; }
 
 body {
     margin: 0;
     background: var(--chassis);
     color: var(--ink);
     font: 15px/1.65 var(--sans);
-    display: flex;
-    flex-direction: column;
 }
 
 code, kbd, pre { font-family: var(--mono); }
@@ -55,6 +61,9 @@ a { color: var(--phosphor); }
     background: var(--panel);
     border-bottom: 1px solid var(--panel-edge);
     flex-wrap: wrap;
+    /* Resta in cima mentre si scorre. Ora che scorre la pagina intera, senza questo
+       il sommario e il cambio lingua sparirebbero appena si scende ai terminali. */
+    position: sticky; top: 0; z-index: 20;
 }
 .marchio { display: flex; align-items: baseline; gap: 9px; flex: 1; min-width: 0; }
 .sigla {
@@ -92,26 +101,19 @@ a { color: var(--phosphor); }
 
 /* ---------------------------------------------------------------- impaginato */
 
-/* La griglia e' a RIGHE, non a colonne: il capitolo sopra, il laboratorio sotto a
-   tutta larghezza. Il lab fratello mette il terminale in una colonna laterale e
-   funziona, perche' li' il terminale e' uno. Qui sono due, e affiancati in una
-   colonna da 42% verrebbero 53 colonne l'uno — meno di un'impronta SHA256, che e'
-   proprio la cosa che questo lab deve far leggere. Su 1440px, cosi', ogni host ne
-   ha ~88. */
-#impaginato {
-    flex: 1; min-height: 0;
-    display: grid;
-    /* La colonna va vincolata esplicitamente. Senza, la traccia implicita e' `auto`
-       e in una griglia `auto` cresce fino al contenuto piu' largo: xterm chiedeva le
-       sue 80 colonne, la griglia gliele dava, e la pagina finiva larga il doppio
-       della finestra con la barra di scorrimento orizzontale. `minmax(0, 1fr)` dice
-       che comanda la finestra. */
-    grid-template-columns: minmax(0, 1fr);
-    grid-template-rows: minmax(0, 1fr) auto;
-}
+/* Il capitolo sopra, il laboratorio sotto, a tutta larghezza. Il lab fratello mette
+   il terminale in una colonna laterale e funziona, perche' li' il terminale e' uno.
+   Qui sono due, e affiancati in una colonna stretta verrebbero 53 colonne l'uno —
+   meno di un'impronta SHA256, che e' proprio la cosa che questo lab deve far
+   leggere. A tutta larghezza ognuno ne ha ~90. */
+/* Niente griglia e niente altezze: il capitolo e il laboratorio sono due sezioni
+   una sotto l'altra, in flusso normale. `min-width: 0` resta necessario perche'
+   xterm ha una larghezza propria (80 colonne) e senza vincolo la fa valere,
+   allargando la pagina oltre la finestra. */
+#impaginato { display: block; min-width: 0; }
 
 .capitolo {
-    overflow-y: auto; padding: 26px 30px 40px;
+    padding: 26px 30px 34px;
     max-width: 860px; width: 100%; margin: 0 auto;
 }
 @media (max-width: 700px) { .capitolo { padding: 18px 16px 30px; } }
@@ -186,16 +188,22 @@ body.pro .probox { display: block; }
 
 /* ---------------------------------------------------------------- laboratorio */
 
+/* Il laboratorio e' una sezione della pagina, non un riquadro con vita propria:
+   comincia dove finisce il capitolo e finisce dove finiscono gli esercizi.
+   Il bordo fosforo dice che si e' entrati in un'altra zona. */
 .lab {
-    display: flex; flex-direction: column; min-height: 0;
+    display: block;
     border-top: 2px solid var(--phosphor); background: var(--panel);
     box-shadow: 0 -12px 24px -18px #000;
-    max-height: 62vh;
 }
 
 .lab-testa {
     display: flex; align-items: center; gap: 8px;
     padding: 7px 12px; border-bottom: 1px solid var(--panel-edge);
+    /* I tre pulsanti devono poter andare a capo: su schermo stretto uscivano dal
+       riquadro e "Reimposta le macchine" — cioe' la rete di sicurezza — restava
+       tagliata fuori dalla finestra, irraggiungibile proprio quando serve. */
+    flex-wrap: wrap;
 }
 .lab-titolo { font: 600 11px var(--mono); letter-spacing: .14em; color: var(--ink-faint); }
 .lab-stato { font-size: 12px; color: var(--ink-soft); }
@@ -273,7 +281,7 @@ body.pro .probox { display: block; }
     background: var(--amber); margin-left: 6px; vertical-align: middle;
 }
 
-.esercizi { flex: 1; overflow-y: auto; padding: 12px; border-top: 1px solid var(--panel-edge); }
+.esercizi { padding: 14px 16px 26px; border-top: 1px solid var(--panel-edge); }
 
 /* ---------------------------------------------------------------- esercizi */
 
@@ -419,8 +427,7 @@ body.pro .probox { display: block; }
     .banco { flex-direction: column; }
     .host { flex: none; border-right: 0; border-bottom: 1px solid var(--panel-edge); }
     .host:last-child { border-bottom: 0; }
-    .host-schermo { height: 210px; }
-    .lab { max-height: none; }
+    .host-schermo { height: 240px; }
 }
 
 /* Sotto i 760px due terminali non sono due terminali: sono due fessure. Meglio
@@ -428,17 +435,24 @@ body.pro .probox { display: block; }
    ha stampato qualcosa — se il server risponde e non lo vedi, sembra che non
    abbia risposto. */
 @media (max-width: 760px) {
-    html, body { height: auto; }
-    body { display: block; }
-    .barra { position: sticky; top: 0; z-index: 20; }
-    #impaginato { display: block; }
-    .capitolo { overflow: visible; height: auto; }
-
     .schede { display: flex; }
     .host { display: none; opacity: 1; }
     .host.mostrato { display: flex; }
     .host-schermo { height: 260px; }
-    .piede { position: static; }
+
+    /* Lo spaziatore elastico spingerebbe i pulsanti fuori dallo schermo: qui sparisce
+       e i tre si dividono una riga tutta loro, sotto il titolo. Meglio due righe di
+       intestazione che un bottone che non si puo' premere. */
+    .lab-testa .spazio { display: none; }
+    .lab-testa .btn.mini { flex: 1 1 auto; text-align: center; }
+    .lab-testa { gap: 6px; }
+
+    /* La tabella del riepilogo, con tre colonne su 360px, diventa illeggibile:
+       si spezza in blocchi, uno per comando. */
+    .recap thead { display: none; }
+    .recap tr { display: block; padding: 8px 0; border-bottom: 1px solid #262d36; }
+    .recap td { display: block; border: 0; padding: 2px 0; }
+    .recap td:first-child { font-size: 14px; }
 }
 
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }

@@ -120,7 +120,21 @@ lab_done() {
 
 # La famiglia "risposta": l'esercizio e' LEGGERE, e leggere non lascia tracce.
 # L'utente scrive:  grep -c ERROR app.log | lab answer
-lab_answer_read() { tr -d ' \t\n\r' < "$LAB_STATE/answer" 2>/dev/null; }
+#
+# Si tolgono gli spazi ai BORDI, non quelli in mezzo.
+#
+# Prima si toglievano tutti, e una risposta consegnata per sbaglio come
+# `lab 10.10.53.2` arrivava al confronto come `lab10.10.53.2`: il verdetto mostrava
+# `got=lab10.10.53.2 want=10.10.53.2`, due stringhe abbastanza simili da far pensare
+# «ma io l'ho scritto giusto». Con lo spazio al suo posto si legge `lab 10.10.53.2`
+# e l'errore salta all'occhio: c'e' una parola di troppo.
+#
+# Ripulire quello che ha scritto l'utente prima di rimostrarglielo nasconde proprio
+# la cosa che deve vedere.
+lab_answer_read() {
+    tr -d '\n\r' < "$LAB_STATE/answer" 2>/dev/null \
+        | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
+}
 
 # lab_answer_eq ID ATTESO — confronta la risposta consegnata con quella
 # ricalcolata dal mondo seminato (mai con una costante scritta a mano)
