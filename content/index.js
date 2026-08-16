@@ -17,10 +17,10 @@ export const CAPITOLI = [
     { id: "ch07", num: 7, carica: () => import("./ch07/chapter.js") },
     { id: "ch08", num: 8, carica: () => import("./ch08/chapter.js") },
     { id: "ch09", num: 9, carica: () => import("./ch09/chapter.js") },
+    { id: "ch10", num: 10, carica: () => import("./ch10/chapter.js") },
 ];
 
 export const IN_ARRIVO = [
-    { num: 10, titolo: { it: "ssh-agent", en: "ssh-agent" } },
     { num: 11, titolo: { it: "Troppe chiavi: IdentitiesOnly", en: "Too many keys: IdentitiesOnly" } },
     { num: 12, titolo: { it: "Ruotare una chiave senza chiudersi fuori", en: "Rotating a key without locking yourself out" } },
 ];
