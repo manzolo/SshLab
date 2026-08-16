@@ -123,7 +123,7 @@ vuoto. Chi apre il lab trova tutto in piedi in mezzo secondo.
 
 ---
 
-## 5. I guasti già pagati — NON ripercorrerli
+## 5. Gli undici guasti già pagati — NON ripercorrerli
 
 Sono tutti reali, tutti costati tempo, e **tutti hanno lasciato un commento nel codice**
 nel punto in cui potresti disfarli senza accorgertene. Se una riga ti sembra
@@ -208,6 +208,16 @@ fallisce su un account che non ha ancora una password.
   scambiavano progressi, semi e lingua.
 - **Il selettore della navigazione da tastiera è `.host`, non `.terminale`**: sbagliarlo
   significa che la freccia destra premuta dentro `vi` cambia capitolo.
+
+### 5.7 · `ssh-keygen -lf privata` puo' leggere la pubblica sbagliata
+
+Se accanto a `privata` esiste `privata.pub`, `ssh-keygen -lf privata` preferisce la
+pubblica senza verificare che i due file siano una coppia. È successo nel primo banco del
+capitolo 2: una privata e una pubblica diverse risultavano avere la stessa impronta, perche'
+le due letture finivano entrambe sul file `.pub`.
+
+→ `lab_fp` passa il contenuto richiesto da `/dev/stdin`, dove non esiste un sidecar da
+preferire. `tests/infrastruttura.sh` lo prova affiancando apposta due chiavi discordanti.
 
 ---
 

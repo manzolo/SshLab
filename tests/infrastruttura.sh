@@ -80,6 +80,17 @@ for k in /opt/lab/keys/rsa/*.pub; do
     uguale "$(ssh-keygen -lf "$k" | awk '{print $1}')" 4096 "lunghezza di $k"
 done
 
+# ssh-keygen -lf privata preferisce una `privata.pub` adiacente, anche quando
+# appartiene a un'altra chiave. lab_fp deve leggere il file richiesto davvero.
+DIR_FP=/tmp/lab-fp-infrastruttura
+rm -rf "$DIR_FP"
+mkdir -p "$DIR_FP"
+cp /opt/lab/keys/ed25519/01 "$DIR_FP/privata"
+cp /opt/lab/keys/ed25519/02.pub "$DIR_FP/privata.pub"
+uguale "$(lab_fp "$DIR_FP/privata")" "$(lab_fp /opt/lab/keys/ed25519/01.pub)" \
+    "impronta della privata con sidecar discordante"
+rm -rf "$DIR_FP"
+
 # known_hosts: il file viene hashato prima della lettura. Un parser artigianale
 # della riga non passerebbe; ssh-keygen -lf invece conserva l'impronta.
 install -d -m 700 -o manzolo -g manzolo /home/manzolo/.ssh

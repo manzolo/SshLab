@@ -3,7 +3,7 @@
 Guida per un agente che lavora in questo repository.
 
 > **Se è la tua prima volta qui, leggi prima [`STATO.md`](STATO.md)**: cos'è fatto, cosa
-> manca, e i dieci guasti già pagati che dal codice sembrano scelte arbitrarie. Il lavoro
+> manca, e gli undici guasti già pagati che dal codice sembrano scelte arbitrarie. Il lavoro
 > che resta è in [`BACKLOG.md`](BACKLOG.md).
 
 ## Cos'è

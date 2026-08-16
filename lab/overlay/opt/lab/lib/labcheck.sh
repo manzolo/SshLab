@@ -180,7 +180,12 @@ lab_come() { u=$1; shift; su "$u" -c "$*" </dev/null 2>&1; }
 # E' il modo giusto di identificare una chiave: il NOME del file non vuol dire
 # niente (id_ed25519 e lavoro sono la stessa chiave se l'impronta combacia), il
 # contenuto della riga puo' avere commenti diversi, l'impronta no.
-lab_fp() { ssh-keygen -lf "$1" 2>/dev/null | awk '{print $2}'; }
+#
+# Il contenuto passa da /dev/stdin apposta. Se si chiede direttamente l'impronta
+# di `privata` e accanto esiste `privata.pub`, ssh-keygen legge la .pub senza
+# verificare che appartenga davvero alla privata. E' esattamente la coppia
+# discordante che il capitolo 2 deve riconoscere.
+lab_fp() { ssh-keygen -lf /dev/stdin 2>/dev/null < "$1" | awk '{print $2}'; }
 
 # lab_fp_tutte DIR — le impronte di tutte le chiavi pubbliche di una cartella
 lab_fp_tutte() {

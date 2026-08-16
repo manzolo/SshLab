@@ -4,7 +4,7 @@ Istruzioni per un agente che lavora in questo repository.
 
 ## Leggi questi due file prima di scrivere una riga
 
-1. **[`STATO.md`](STATO.md)** — cos'è fatto, cosa manca, l'architettura e **i dieci guasti
+1. **[`STATO.md`](STATO.md)** — cos'è fatto, cosa manca, l'architettura e **gli undici guasti
    già pagati**. Diversi pezzi di codice sembrano sovra-ingegnerizzati e non lo sono: sono
    la cicatrice di un bug reale. Disfarli li fa tornare.
 2. **[`BACKLOG.md`](BACKLOG.md)** — il lavoro che resta: i capitoli 2…12, con per ciascuno

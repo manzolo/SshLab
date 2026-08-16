@@ -10,11 +10,11 @@
 
 export const CAPITOLI = [
     { id: "ch01", num: 1, carica: () => import("./ch01/chapter.js") },
+    { id: "ch02", num: 2, carica: () => import("./ch02/chapter.js") },
 ];
 
 // Quello che verra', dichiarato prima di essere scritto (vedi sopra).
 export const IN_ARRIVO = [
-    { num: 2,  titolo: { it: "La coppia di chiavi", en: "The key pair" } },
     { num: 3,  titolo: { it: "L'impronta", en: "The fingerprint" } },
     { num: 4,  titolo: { it: "authorized_keys: entrare senza password", en: "authorized_keys: getting in without a password" } },
     { num: 5,  titolo: { it: "Chi firma cosa", en: "Who signs what" } },
