@@ -19,11 +19,11 @@ export const CAPITOLI = [
     { id: "ch09", num: 9, carica: () => import("./ch09/chapter.js") },
     { id: "ch10", num: 10, carica: () => import("./ch10/chapter.js") },
     { id: "ch11", num: 11, carica: () => import("./ch11/chapter.js") },
+    { id: "ch12", num: 12, carica: () => import("./ch12/chapter.js") },
 ];
 
-export const IN_ARRIVO = [
-    { num: 12, titolo: { it: "Ruotare una chiave senza chiudersi fuori", en: "Rotating a key without locking yourself out" } },
-];
+// Il corso promesso e' completo; la lista resta per il contratto della UI.
+export const IN_ARRIVO = [];
 
 const cache = new Map();
 

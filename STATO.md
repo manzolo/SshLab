@@ -1,13 +1,14 @@
 # STATO DEL LAVORO — leggi questo prima di toccare qualsiasi cosa
 
-Aggiornato al **2026-08-16**, dopo il completamento dei capitoli 2, 3 e 4.
+Aggiornato al **2026-08-16**, dopo il completamento dei dodici capitoli.
 
 Questo file esiste per una ragione sola: **evitarti di riscoprire l'acqua calda.**
 Il motore di questo lab è finito e misurato, e ci sono dentro una decina di guasti già
 pagati a caro prezzo che da fuori sembrano scelte arbitrarie. Sotto trovi quali sono,
 perché il codice è fatto così, e cosa manca davvero.
 
-**Il lavoro che resta è in [`BACKLOG.md`](BACKLOG.md): i capitoli 5…12.**
+**Il lavoro didattico e' completo.** La coda esterna e la consegna sono in
+[`BACKLOG.md`](BACKLOG.md) sotto «Fuori dai capitoli».
 
 ---
 
@@ -21,7 +22,7 @@ Sito statico, bilingue IT/EN, **zero dipendenze a runtime, zero build del sito**
 destinato a GitHub Pages. Fa parte della collana EDU-\* di manzolo e nasce da
 **LinuxLab** (stesso motore, copiato al commit `a8dee38` e poi divergente).
 
-Stato: **motore e infrastruttura completi e verificati, 4 capitoli su 12 scritti.**
+Stato: **motore, infrastruttura e 12 capitoli su 12 completi e verificati.**
 
 ---
 
@@ -33,9 +34,9 @@ L'immagine del guest **non è nel repo** (`images/` è in `.gitignore`): va cost
 npm run image     # ~4 min. Serve: Docker, zstd, python con il modulo zstandard
 npm run serve     # http://localhost:8802  (i moduli ES non si caricano da file://)
 
-npm test          # ~1 s   — struttura, bilinguismo, opzioni VM. Attesi: 2 file / 16 controlli
+npm test          # ~1 s   — struttura, bilinguismo, opzioni VM. Attesi: 60/60
 npm run e2e       # ~1 min — Chrome headless sul sito servito. Atteso: tutto verde
-npm run test:labs # ~5 min — infrastruttura vera + ogni esercizio su tre semi
+npm run test:labs # ~15 min — infrastruttura vera + ogni esercizio su tre semi
 npm run test:regressione # ~3 min — consegna, CWD, identita' e tastiera dal terminale
 ```
 
@@ -44,8 +45,8 @@ dopo ogni modifica all'infrastruttura. Consegna, cambio esercizio, identita' dei
 terminali e coda della tastiera hanno ora regressioni che digitano come una persona;
 la lettura manuale resta insostituibile prima di accettare un capitolo o una modifica UI.
 
-Al 2026-08-16 sono verdi: `npm test` (2 file, 16 controlli) · `e2e` ·
-`test:labs` 15/15 · `test:consegna` 5/5 · `test:cwd` 5/5 ·
+Al 2026-08-16 sono verdi: `npm test` 60/60 · `e2e` ·
+`test:labs` 177/177 · `test:consegna` 5/5 · `test:cwd` 5/5 ·
 `test:identita` 4/4 · `test:tastiera` 3/3.
 
 ---
@@ -123,7 +124,7 @@ vuoto. Chi apre il lab trova tutto in piedi in mezzo secondo.
 
 ---
 
-## 5. I dodici guasti già pagati — NON ripercorrerli
+## 5. I tredici guasti già pagati — NON ripercorrerli
 
 Sono tutti reali, tutti costati tempo, e **tutti hanno lasciato un commento nel codice**
 nel punto in cui potresti disfarli senza accorgertene. Se una riga ti sembra
@@ -230,6 +231,18 @@ risultato piu' recente diventa quella riga e non l'accesso SSH. Anche
 soltanto righe marcate `sshd[...]` o `sshd-session[...]`; il banco infrastrutturale aggiunge
 apposta una falsa riga sudo dopo un login riuscito.
 
+### 5.9 · La rete variabile di un esercizio non deve trapelare nel successivo
+
+Il capitolo 1 cambia apposta gli indirizzi in `10.10.X.1/2`, ma i capitoli successivi
+insegnano comandi con la rete base `10.10.0.1/2`. I loro seed preparavano chiavi e file
+senza ripristinare gli indirizzi: i check passavano perche' usano `lab_srv_ip`, mentre
+chi seguiva il testo otteneva `Network unreachable` dal capitolo 5 in poi.
+
+→ `labagentd` ripristina rete, file di stato e cache ARP prima di ogni `seed` e `reset`;
+il seed di ch01 puo' poi sostituirli con il proprio mondo variabile.
+→ `tests/labs.mjs` semina ch01 e subito dopo ch05, e pretende il ritorno esatto alla
+rete dichiarata nei comandi didattici.
+
 ---
 
 ## 6. Le regole del contenuto, che valgono più del codice
@@ -293,8 +306,9 @@ provati nella VM vera da `tests/infrastruttura.sh`.
 ### Fatto e verificato
 
 - Motore a due host, snapshot, i due terminali, il canale di verifica.
-- **Capitoli 1-4** completi IT/EN e provati a mano: due host, coppia privata/pubblica,
-  impronta e primo login con `authorized_keys`.
+- **Capitoli 1-12** completi IT/EN: dai due host alla rotazione additiva, con 25
+  esercizi. Ogni stato iniziale fallisce, ogni soluzione passa su tre semi e ogni
+  scorciatoia dichiarata viene respinta.
 - Guida «Basi» che si apre alla prima visita, sommario, profondità BASE/PRO, IT/EN.
 - Otto banchi di prova, fra cui quattro che **fanno il giro come lo fa una persona**
   (`test:consegna`, `test:cwd`, `test:identita`, `test:tastiera`) — esistono perché tutti i difetti
@@ -311,10 +325,9 @@ provati nella VM vera da `tests/infrastruttura.sh`.
 
 ### Manca
 
-- **I capitoli 5…12.** Stanno in `BACKLOG.md` con, per ciascuno,
-  l'invariante misurabile di ogni esercizio.
 - La correzione del `\r` (§5.2) da portare su **LinuxLab, che è online**.
 - La consegna: `gh repo create manzolo/SshLab`, Pages, topic `edu-simulator`.
+- La scheda e la riga di diario nel Gemello Digitale.
 
 ### Materia prima per i capitoli
 

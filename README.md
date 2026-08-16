@@ -89,20 +89,20 @@ quella nascosta quando l'altra macchina stampa qualcosa:
 | | Capitolo | |
 |---|---|---|
 | 01 | Due macchine e un cavo | ✅ |
-| 02 | La coppia di chiavi | in arrivo |
-| 03 | L'impronta | in arrivo |
-| 04 | `authorized_keys`: entrare senza password | in arrivo |
-| 05 | Chi firma cosa | in arrivo |
-| 06 | `known_hosts` e la prima volta | in arrivo |
-| 07 | «L'impronta è cambiata» | in arrivo |
-| 08 | Permessi: cosa pretende `sshd` | in arrivo |
-| 09 | La passphrase | in arrivo |
-| 10 | `ssh-agent` | in arrivo |
-| 11 | Troppe chiavi: `IdentitiesOnly` | in arrivo |
-| 12 | Ruotare una chiave senza chiudersi fuori | in arrivo |
+| 02 | La coppia di chiavi | ✅ |
+| 03 | L'impronta | ✅ |
+| 04 | `authorized_keys`: entrare senza password | ✅ |
+| 05 | Chi firma cosa | ✅ |
+| 06 | `known_hosts` e la prima volta | ✅ |
+| 07 | «L'impronta è cambiata» | ✅ |
+| 08 | Permessi: cosa pretende `sshd` | ✅ |
+| 09 | La passphrase | ✅ |
+| 10 | `ssh-agent` | ✅ |
+| 11 | Troppe chiavi: `IdentitiesOnly` | ✅ |
+| 12 | Ruotare una chiave senza chiudersi fuori | ✅ |
 
-I capitoli non ancora scritti compaiono lo stesso nel sommario, con il loro obiettivo:
-un vuoto dichiarato toglie l'ansia meglio di un vuoto nascosto.
+I dodici capitoli sono disponibili nel sommario e formano un percorso unico: dalla
+prima connessione alla rotazione additiva di una chiave.
 
 ## Farlo girare in locale
 

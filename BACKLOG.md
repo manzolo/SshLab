@@ -1,7 +1,8 @@
-# BACKLOG — i capitoli 5…12
+# BACKLOG — invarianti dei dodici capitoli e coda aperta
 
-Stato al 2026-08-16: **il motore e l'infrastruttura I1-I4 sono finiti; il capitolo 1
-è in piedi.** I capitoli 2-4 sono completi; mancano i capitoli 5-12.
+Stato al 2026-08-16: **motore, infrastruttura I1-I4 e capitoli 1-12 sono completi.**
+Le specifiche restano qui come contratto dei check; il lavoro ancora aperto e' in
+«Fuori dai capitoli».
 
 Questo file è scritto per essere aperto da un agente e lavorato un capitolo per volta.
 Non è un elenco di titoli: per ogni capitolo c'è **l'invariante misurabile**, che è la
@@ -199,7 +200,7 @@ riprovare e capire.
 
 ---
 
-### ch05 · Chi firma cosa — *autorizzata non vuol dire firmabile*
+### ch05 · Chi firma cosa — *autorizzata non vuol dire firmabile* (completato)
 
 **La cosa che si impara:** il server non «riconosce» te: verifica una firma. Se la
 privata non c'è, la riga in `authorized_keys` non serve a niente — e viceversa.
@@ -219,7 +220,7 @@ segreto non attraversa mai il filo, nemmeno cifrato.
 
 ---
 
-### ch06 · `known_hosts` e la prima volta (TOFU)
+### ch06 · `known_hosts` e la prima volta (TOFU) (completato)
 
 **La cosa che si impara:** finora abbiamo verificato **te**. Adesso verifichiamo
 **lui**. La prima volta non c'è modo di sapere se è il server giusto: si fida e si
@@ -242,7 +243,7 @@ esiste, cosa fa e perché sui sistemi veri è come togliere la serratura.
 
 ---
 
-### ch07 · «L'impronta è cambiata» — *il capitolo che si può sbagliare*
+### ch07 · «L'impronta è cambiata» — *il capitolo che si può sbagliare* (completato)
 
 **La cosa che si impara:** quel muro giallo con
 `WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED` è una domanda, non un ostacolo. Il
@@ -272,7 +273,7 @@ corso in cui la risposta giusta è non fare niente**, e va detto nel testo dopo.
 
 ---
 
-### ch08 · Permessi — *cosa pretende `sshd`, e perché*
+### ch08 · Permessi — *cosa pretende `sshd`, e perché* (completato)
 
 **La cosa che si impara:** `sshd` rifiuta le chiavi che chiunque altro potrebbe aver
 scritto. Lato client, `ssh` rifiuta di usare una privata leggibile da altri. Sono due
@@ -300,7 +301,7 @@ scrivibile da altri, chi può rinominare `.ssh` può metterci il proprio.
 
 ---
 
-### ch09 · La passphrase — *e le tre cose che non risolve*
+### ch09 · La passphrase — *e le tre cose che non risolve* (completato)
 
 **La cosa che si impara:** la passphrase cifra la chiave **sul disco**. Non cambia la
 chiave, non cambia la pubblica, non ritira niente. È il capitolo con il materiale
@@ -325,7 +326,7 @@ falsifica il tempo: si dichiara.
 
 ---
 
-### ch10 · `ssh-agent` — *la passphrase una volta sola*
+### ch10 · `ssh-agent` — *la passphrase una volta sola* (completato)
 
 **La cosa che si impara:** l'agent tiene la chiave **sbloccata in memoria** e firma per
 conto tuo. Non è un portachiavi di password: è un processo che sa firmare e non
@@ -354,7 +355,7 @@ va nel «se avanza».
 
 ---
 
-### ch11 · Troppe chiavi — *`IdentitiesOnly`, e il conto delle offerte*
+### ch11 · Troppe chiavi — *`IdentitiesOnly`, e il conto delle offerte* (completato)
 
 **La cosa che si impara:** il client **offre le chiavi una per una**, e il server ne
 accetta solo un certo numero di tentativi (`MaxAuthTries`, di default 6). Con sei chiavi
@@ -381,7 +382,7 @@ Nel testo: sul server di qualcun altro quel numero non lo alzi tu.
 
 ---
 
-### ch12 · Ruotare una chiave senza chiudersi fuori — *capstone*
+### ch12 · Ruotare una chiave senza chiudersi fuori — *capstone* (completato)
 
 **La cosa che si impara:** la sequenza in cinque passi che sta in
 `30_Note/chiavi-ssh.md` §«Da fare (in ordine, sempre additivo)». È **additiva**:
@@ -435,7 +436,7 @@ computer che non esistono più, e con accesso root.
       «la verifica non ha risposto». Il difetto è ereditato da lì.
 - [ ] **Consegna:** `gh repo create manzolo/SshLab`, Pages, topic `edu-simulator`,
       riga nel profilo `~/Workspaces/github/manzolo`.
-- [ ] **Screenshot del README** rigenerati quando i capitoli saranno più di uno
+- [x] **Screenshot del README** rigenerati con tutti e dodici i capitoli
       (`npm run screenshot`).
 - [ ] **Gemello:** scheda in `20_Progetti/ssh-lab.md` e una riga nel `Diario/2026-08.md`
       sul *perché* — l'unica parte non ricostruibile dai commit.

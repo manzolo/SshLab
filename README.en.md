@@ -87,20 +87,20 @@ hidden one when the other machine prints something:
 | | Chapter | |
 |---|---|---|
 | 01 | Two machines and a cable | ✅ |
-| 02 | The key pair | coming |
-| 03 | The fingerprint | coming |
-| 04 | `authorized_keys`: getting in without a password | coming |
-| 05 | Who signs what | coming |
-| 06 | `known_hosts` and the first time | coming |
-| 07 | “The fingerprint changed” | coming |
-| 08 | Permissions: what `sshd` demands | coming |
-| 09 | The passphrase | coming |
-| 10 | `ssh-agent` | coming |
-| 11 | Too many keys: `IdentitiesOnly` | coming |
-| 12 | Rotating a key without locking yourself out | coming |
+| 02 | The key pair | ✅ |
+| 03 | The fingerprint | ✅ |
+| 04 | `authorized_keys`: getting in without a password | ✅ |
+| 05 | Who signs what | ✅ |
+| 06 | `known_hosts` and the first time | ✅ |
+| 07 | “The fingerprint changed” | ✅ |
+| 08 | Permissions: what `sshd` demands | ✅ |
+| 09 | The passphrase | ✅ |
+| 10 | `ssh-agent` | ✅ |
+| 11 | Too many keys: `IdentitiesOnly` | ✅ |
+| 12 | Rotating a key without locking yourself out | ✅ |
 
-Chapters not yet written still appear in the table of contents, with their goal: a
-declared gap is less unsettling than a hidden one.
+All twelve chapters are available in the table of contents and form one path, from
+the first connection to additive key rotation.
 
 ## Running it locally
 
