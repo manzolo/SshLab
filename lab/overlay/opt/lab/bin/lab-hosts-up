@@ -40,6 +40,33 @@ if ! ip netns list 2>/dev/null | grep -q '^server'; then
     ip netns exec server ip link set veth-srv up
 fi
 
+# --- il NOME del secondo host --------------------------------------------------
+#
+# Il nome di una macchina non sta nel namespace di rete: sta in un namespace a
+# parte, l'UTS. `ip netns exec server` porta dentro la pila di rete giusta e basta
+# — quindi un processo avviato cosi' ha l'indirizzo del server e il NOME del pc.
+#
+# Si vedeva nel punto peggiore: entrando con `ssh deploy@10.10.0.2` il prompt
+# diceva `deploy@pc`. Cioe' il lab dichiarava di averti portato sull'altra macchina
+# e poi ti mostrava il nome di quella di partenza — e il prompt e' l'unica cosa,
+# dopo un ssh, che dice davvero dove sei.
+#
+# `unshare --uts=FILE` crea il namespace e lo tiene in vita con un bind mount,
+# esattamente come `ip netns add` fa per la rete. Da qui in poi chiunque debba
+# essere "il server" entra in TUTTI E DUE: --net e --uts.
+if [ ! -s "$STATO/uts-server" ]; then
+    : > "$STATO/uts-server"
+    unshare --uts="$STATO/uts-server" hostname server
+fi
+
+# Un solo posto che sa come si entra nel server, cosi' non si puo' dimenticarne
+# meta' (ed e' esattamente quello che era successo).
+cat > "$STATO/entra-server" <<FINE
+#!/bin/sh
+exec nsenter --net=/var/run/netns/server --uts=$STATO/uts-server -- "\$@"
+FINE
+chmod 755 "$STATO/entra-server"
+
 # --- i due utenti -------------------------------------------------------------
 # Li crea il Dockerfile, a build time: qui resta solo la rete di sicurezza, perche'
 # senza di loro non parte niente e un errore muto costerebbe un'ora.
@@ -69,9 +96,11 @@ PubkeyAuthentication yes
 Subsystem sftp /usr/lib/ssh/sftp-server
 FINE
 
-# --- sshd, dentro il namespace del server -------------------------------------
+# --- sshd, dentro il namespace del server (rete E nome) ------------------------
+# Le sessioni che sshd apre ereditano i suoi namespace: e' avviandolo qui dentro
+# che `ssh deploy@...` finisce su una macchina che si chiama davvero `server`.
 if [ ! -s "$STATO/sshd.pid" ] || ! kill -0 "$(cat "$STATO/sshd.pid")" 2>/dev/null; then
-    ip netns exec server /usr/sbin/sshd -f /etc/ssh/sshd_config.lab -o "PidFile=$STATO/sshd.pid"
+    "$STATO/entra-server" /usr/sbin/sshd -f /etc/ssh/sshd_config.lab -o "PidFile=$STATO/sshd.pid"
 fi
 
 printf '%s' "$SRV_IP"      > "$STATO/srv_ip"

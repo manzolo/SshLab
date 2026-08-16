@@ -96,7 +96,7 @@ async function principale() {
     // --- il mondo c'e' gia'? ----------------------------------------------------
     const mondo = await passo("il mondo dentro lo snapshot", `
         ip -o -4 addr show veth-pc | awk '{print "pc:  " $4}'
-        ip netns exec server ip -o -4 addr show veth-srv | awk '{print "srv: " $4}'
+        /run/lab/entra-server ip -o -4 addr show veth-srv | awk '{print "srv: " $4}'
         ping -c 1 -W 3 10.10.0.2 >/dev/null 2>&1 && echo "cavo: ok"
         kill -0 "$(cat /run/lab/sshd.pid)" 2>/dev/null && echo "sshd: vivo"
         getent passwd manzolo deploy | cut -d: -f1,6 | tr '\\n' ' '; echo

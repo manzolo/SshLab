@@ -99,7 +99,7 @@ const ko = (m) => { console.log(`  ✗ ${m}`); problemi.push(m); esitoFinale = 1
     const dueVere = await val(`(async () => {
         const L = window.__sshlab;
         const a = await L.agente.shell("ip -4 -o addr show veth-pc | awk '{print $4}'");
-        const b = await L.agente.shell("ip netns exec server ip -4 -o addr show veth-srv | awk '{print $4}'");
+        const b = await L.agente.shell("/run/lab/entra-server ip -4 -o addr show veth-srv | awk '{print $4}'");
         return JSON.stringify([(a.out || "").trim(), (b.out || "").trim()]);
     })()`);
     const [ipPc, ipSrv] = JSON.parse(dueVere || '["",""]');

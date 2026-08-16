@@ -118,6 +118,8 @@ The chapters can be read without the image: without it, only the machines are mi
 | `npm test` | chapter structure, both languages, machine options kept in sync |
 | `npm run test:labs` | boots the **real** machine and runs every exercise on three seeds |
 | `npm run test:consegna` | the hand-in round trip **typed into the terminal**, like a person |
+| `npm run test:identita` | after an `ssh`, the prompt really says `deploy@server` |
+| `npm run test:tastiera` | what you type (or paste) is what reaches the machine |
 | `npm run spike` | the architecture proof, with timings |
 | `npm run e2e` | headless Chrome smoke test (needs `npm run serve` running) |
 | `npm run screenshot` | regenerates the images in this README |

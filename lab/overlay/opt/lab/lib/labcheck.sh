@@ -147,10 +147,15 @@ lab_answer_eq() {
 # ---------------------------------------------------------------- il mondo a due
 #
 # La verifica gira sul pc, come root. Per guardare dentro l'altro host non serve
-# la rete: e' la stessa macchina, e un `ip netns exec` ci porta dentro. E' il
-# vantaggio piu' concreto dei namespace rispetto a due VM separate — con due VM
-# servirebbe un secondo agente su un secondo canale, e quel canale potrebbe essere
-# proprio quello che l'esercizio ha appena rotto.
+# la rete: e' la stessa macchina, e si entra nei suoi namespace. E' il vantaggio
+# piu' concreto rispetto a due VM separate — con due VM servirebbe un secondo
+# agente su un secondo canale, e quel canale potrebbe essere proprio quello che
+# l'esercizio ha appena rotto.
+#
+# "Entrare nel server" si fa in UN modo solo, /run/lab/entra-server, che porta
+# dentro sia la rete sia il nome. Averne due (uno con la rete e basta) e' stata la
+# causa del bug del prompt: sshd stava in mezzo al guado e le sessioni ssh
+# atterravano su una macchina che si chiamava ancora `pc`.
 
 LAB_RUN=/run/lab
 lab_srv_ip()   { cat "$LAB_RUN/srv_ip"   2>/dev/null || echo 10.10.0.2; }
@@ -159,7 +164,12 @@ lab_srv_user() { cat "$LAB_RUN/srv_user" 2>/dev/null || echo deploy; }
 lab_pc_user()  { cat "$LAB_RUN/pc_user"  2>/dev/null || echo manzolo; }
 
 # lab_srv COMANDO... — esegue sull'host "server"
-lab_srv() { ip netns exec server "$@"; }
+#
+# Passa dal punto unico, che entra sia nella rete sia nel NOME: con il solo
+# `ip netns exec` un comando avrebbe l'indirizzo del server e l'hostname del pc, e
+# un check che confronta `hostname` fallirebbe per una ragione che non c'entra
+# niente con l'esercizio.
+lab_srv() { /run/lab/entra-server "$@"; }
 
 # lab_come UTENTE COMANDO — esegue con l'identita' di chi studia.
 # `su -c`, non `su -`: il trattino azzererebbe l'ambiente, SSH_AUTH_SOCK compreso,

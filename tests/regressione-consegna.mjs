@@ -86,7 +86,7 @@ await chiedi("write", `/opt/lab/ch01/e1/check.sh 755 ${b64(check)}`);
 const s = await chiedi("seed", "ch01/e1 424242");
 if (!s.ok) { console.error("il seed e' fallito:", s.out); process.exit(1); }
 
-const ipAtteso = await sh("ip netns exec server ip -4 -o addr show veth-srv | awk '{print $4}' | cut -d/ -f1");
+const ipAtteso = await sh("/run/lab/entra-server ip -4 -o addr show veth-srv | awk '{print $4}' | cut -d/ -f1");
 
 // chi digita e' manzolo, e deve essere manzolo
 emu.serial_send_bytes(0, new TextEncoder().encode("\n"));

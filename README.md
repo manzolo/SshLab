@@ -120,6 +120,8 @@ I capitoli si leggono anche senza immagine: senza, mancano solo le macchine.
 | `npm test` | struttura dei capitoli, bilinguismo, coerenza delle opzioni della macchina |
 | `npm run test:labs` | avvia la **vera** macchina ed esegue ogni esercizio su tre semi |
 | `npm run test:consegna` | il giro della consegna **digitando nel terminale**, come una persona |
+| `npm run test:identita` | dopo un `ssh`, il prompt dice davvero `deploy@server` |
+| `npm run test:tastiera` | quello che scrivi (o incolli) e' quello che arriva alla macchina |
 | `npm run spike` | la prova dell'architettura, con i tempi |
 | `npm run e2e` | smoke test su Chrome headless (serve `npm run serve` attivo) |
 | `npm run screenshot` | rigenera le immagini di questo README |

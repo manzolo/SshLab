@@ -10,8 +10,8 @@ nuova_srv="10.10.$terzo.2"
 
 ip addr flush dev veth-pc 2>/dev/null
 ip addr add "$nuova_pc/24" dev veth-pc
-ip netns exec server ip addr flush dev veth-srv 2>/dev/null
-ip netns exec server ip addr add "$nuova_srv/24" dev veth-srv
+lab_srv ip addr flush dev veth-srv 2>/dev/null
+lab_srv ip addr add "$nuova_srv/24" dev veth-srv
 
 printf '%s' "$nuova_pc"  > /run/lab/pc_ip
 printf '%s' "$nuova_srv" > /run/lab/srv_ip

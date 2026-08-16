@@ -17,6 +17,8 @@
     "test": "node --test tests/content.test.js tests/opzioni.test.js",
     "test:labs": "node tests/labs.mjs",
     "test:consegna": "node tests/regressione-consegna.mjs",
+    "test:identita": "node tests/regressione-identita.mjs",
+    "test:tastiera": "node tests/regressione-tastiera.mjs",
     "spike": "node tools/spike.mjs",
     "e2e": "node tools/e2e.mjs http://127.0.0.1:8802/",
     "new-chapter": "node tools/new-chapter.mjs",

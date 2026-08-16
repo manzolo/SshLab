@@ -21,6 +21,31 @@ const terminali = new Map();
 
 export const UART = { pc: 0, server: 2 };
 
+// ---------------------------------------------------------------- la coda di invio
+//
+// La FIFO della UART emulata e' di sedici byte. Si manda meno di quella, con una
+// pausa in mezzo, e non trabocca mai. I numeri sono prudenti apposta: 8 byte ogni
+// 4 ms sono 2000 byte al secondo, cioe' molto piu' veloce di chiunque digiti e
+// abbastanza per un incolla (una chiave pubblica da 80 caratteri: 40 ms).
+const BLOCCO = 8;
+const RITMO = 4;
+const code = new Map();
+
+function accoda(uart, byte) {
+    const coda = code.get(uart) || { byte: [], attivo: false };
+    coda.byte.push(...byte);
+    code.set(uart, coda);
+    if (!coda.attivo) svuota(uart);
+}
+
+function svuota(uart) {
+    const coda = code.get(uart);
+    if (!coda || !coda.byte.length) { if (coda) coda.attivo = false; return; }
+    coda.attivo = true;
+    macchina()?.serial_send_bytes(uart, Uint8Array.from(coda.byte.splice(0, BLOCCO)));
+    setTimeout(() => svuota(uart), RITMO);
+}
+
 /** Crea (una volta) il terminale di una macchina e lo attacca al contenitore. */
 export function creaTerminale(contenitore, uart) {
     const gia = terminali.get(uart);
@@ -39,10 +64,20 @@ export function creaTerminale(contenitore, uart) {
     });
     term.open(contenitore);
 
-    // serial_send_bytes, non serial0_send: quest'ultimo fa charCodeAt su ogni
-    // carattere, quindi manda UN byte anche per una lettera accentata, che in
-    // UTF-8 ne vuole due. Con la codifica esplicita `à` arriva intera.
-    term.onData(d => macchina()?.serial_send_bytes(uart, new TextEncoder().encode(d)));
+    // I byte si mandano IN CODA, a piccoli blocchi, non tutti insieme.
+    //
+    // Dall'altra parte c'e' una UART emulata: sedici byte di FIFO e nessun controllo
+    // di flusso. Quello che trabocca non torna indietro — si perde, e se a spezzarsi
+    // e' un carattere UTF-8 (che sono due byte) resta a mezzo e diventa un'altra
+    // lettera. Cosi' `server` e' arrivato come `ßer`: a schermo l'eco diceva una
+    // cosa e a `ssh` ne e' arrivata un'altra, che e' il modo peggiore di sbagliare
+    // perche' incolpi te stesso.
+    //
+    // Digitando a mano il rischio e' remoto; incollando una riga — o battendo mentre
+    // l'altra macchina sta stampando, visto che le due seriali condividono la linea
+    // di interruzione — smette di esserlo. La coda costa qualche millisecondo su un
+    // incolla lungo e toglie di mezzo l'intera classe di guasti.
+    term.onData(d => accoda(uart, new TextEncoder().encode(d)));
     macchina().add_listener(`serial${uart}-output-byte`, b => {
         term.write(String.fromCharCode(b));
         const t = terminali.get(uart);
