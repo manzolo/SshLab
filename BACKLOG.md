@@ -1,7 +1,7 @@
-# BACKLOG — i capitoli 2…12
+# BACKLOG — i capitoli 5…12
 
 Stato al 2026-08-16: **il motore e l'infrastruttura I1-I4 sono finiti; il capitolo 1
-è in piedi.** Mancano i capitoli 2-12.
+è in piedi.** I capitoli 2-4 sono completi; mancano i capitoli 5-12.
 
 Questo file è scritto per essere aperto da un agente e lavorato un capitolo per volta.
 Non è un elenco di titoli: per ogni capitolo c'è **l'invariante misurabile**, che è la
@@ -122,7 +122,7 @@ mentale del precedente, e il 12 è il capstone che li usa tutti.
 
 ---
 
-### ch02 · La coppia di chiavi — *due file, uno resta a casa*
+### ch02 · La coppia di chiavi — *due file, uno resta a casa* (completato)
 
 **La cosa che si impara:** la privata non esce mai; la pubblica si può pubblicare. E
 la pubblica si **ricava** dalla privata in ogni momento — quindi perderla non è un
@@ -150,7 +150,7 @@ lunghezza da sbagliare. Con l'eccezione onesta: i server vecchi non la conoscono
 
 ---
 
-### ch03 · L'impronta — *il nome del file non vuol dire niente*
+### ch03 · L'impronta — *il nome del file non vuol dire niente* (completato)
 
 **La cosa che si impara:** l'identità di una chiave è la sua impronta. `id_ed25519` e
 `lavoro` sono **la stessa chiave** se l'impronta combacia; due file identici di nome
@@ -172,7 +172,7 @@ si vede ancora sui sistemi vecchi.
 
 ---
 
-### ch04 · `authorized_keys` — *entrare senza password*
+### ch04 · `authorized_keys` — *entrare senza password* (completato)
 
 **La cosa che si impara:** l'autorizzazione **vive sul server**, in un file di testo,
 una riga per chiave. Non c'è nessun registro centrale e nessuna magia.

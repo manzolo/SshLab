@@ -1,13 +1,13 @@
 # STATO DEL LAVORO — leggi questo prima di toccare qualsiasi cosa
 
-Aggiornato al **2026-08-16**, dopo il completamento dell'infrastruttura I1-I4.
+Aggiornato al **2026-08-16**, dopo il completamento dei capitoli 2, 3 e 4.
 
 Questo file esiste per una ragione sola: **evitarti di riscoprire l'acqua calda.**
 Il motore di questo lab è finito e misurato, e ci sono dentro una decina di guasti già
 pagati a caro prezzo che da fuori sembrano scelte arbitrarie. Sotto trovi quali sono,
 perché il codice è fatto così, e cosa manca davvero.
 
-**Il lavoro che resta è in [`BACKLOG.md`](BACKLOG.md): i capitoli 2…12.**
+**Il lavoro che resta è in [`BACKLOG.md`](BACKLOG.md): i capitoli 5…12.**
 
 ---
 
@@ -21,7 +21,7 @@ Sito statico, bilingue IT/EN, **zero dipendenze a runtime, zero build del sito**
 destinato a GitHub Pages. Fa parte della collana EDU-\* di manzolo e nasce da
 **LinuxLab** (stesso motore, copiato al commit `a8dee38` e poi divergente).
 
-Stato: **motore e infrastruttura completi e verificati, 1 capitolo su 12 scritto.**
+Stato: **motore e infrastruttura completi e verificati, 4 capitoli su 12 scritti.**
 
 ---
 
@@ -123,7 +123,7 @@ vuoto. Chi apre il lab trova tutto in piedi in mezzo secondo.
 
 ---
 
-## 5. Gli undici guasti già pagati — NON ripercorrerli
+## 5. I dodici guasti già pagati — NON ripercorrerli
 
 Sono tutti reali, tutti costati tempo, e **tutti hanno lasciato un commento nel codice**
 nel punto in cui potresti disfarli senza accorgertene. Se una riga ti sembra
@@ -219,6 +219,17 @@ le due letture finivano entrambe sul file `.pub`.
 → `lab_fp` passa il contenuto richiesto da `/dev/stdin`, dove non esiste un sidecar da
 preferire. `tests/infrastruttura.sh` lo prova affiancando apposta due chiavi discordanti.
 
+### 5.8 · Cercare `Accepted publickey` puo' trovare il comando di ricerca
+
+Sul terminale del server, `sudo grep 'Accepted publickey' /var/log/messages` scrive nello
+stesso registro una riga `sudo` che contiene il comando appena eseguito. Con `tail -1`, il
+risultato piu' recente diventa quella riga e non l'accesso SSH. Anche
+`lab_sshd_dice 'Accepted publickey'` aveva lo stesso difetto.
+
+→ Il comando didattico filtra il campo del processo con `awk`. `lab_sshd_dice` accetta
+soltanto righe marcate `sshd[...]` o `sshd-session[...]`; il banco infrastrutturale aggiunge
+apposta una falsa riga sudo dopo un login riuscito.
+
 ---
 
 ## 6. Le regole del contenuto, che valgono più del codice
@@ -282,8 +293,8 @@ provati nella VM vera da `tests/infrastruttura.sh`.
 ### Fatto e verificato
 
 - Motore a due host, snapshot, i due terminali, il canale di verifica.
-- **Capitolo 1** «Due macchine e un cavo», due esercizi (uno `risposta`, uno `stato`),
-  completo IT/EN, con blocchi `hook` `lead` `analogy` `shown` `pitfalls` `pro` `lab` `recap`.
+- **Capitoli 1-4** completi IT/EN e provati a mano: due host, coppia privata/pubblica,
+  impronta e primo login con `authorized_keys`.
 - Guida «Basi» che si apre alla prima visita, sommario, profondità BASE/PRO, IT/EN.
 - Otto banchi di prova, fra cui quattro che **fanno il giro come lo fa una persona**
   (`test:consegna`, `test:cwd`, `test:identita`, `test:tastiera`) — esistono perché tutti i difetti
@@ -300,7 +311,7 @@ provati nella VM vera da `tests/infrastruttura.sh`.
 
 ### Manca
 
-- **I capitoli 2…12.** Sono il grosso, e stanno in `BACKLOG.md` con, per ciascuno,
+- **I capitoli 5…12.** Stanno in `BACKLOG.md` con, per ciascuno,
   l'invariante misurabile di ogni esercizio.
 - La correzione del `\r` (§5.2) da portare su **LinuxLab, che è online**.
 - La consegna: `gh repo create manzolo/SshLab`, Pages, topic `edu-simulator`.

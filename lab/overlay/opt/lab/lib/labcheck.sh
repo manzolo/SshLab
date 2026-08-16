@@ -333,7 +333,10 @@ lab_sshd_config_intatto() {
 # check che guarda qui non sta guardando cosa ha DIGITATO chi studia — sta
 # guardando cosa e' successo al server. E' la differenza fra sorvegliare e
 # misurare.
-lab_sshd_dice() { grep -E "$1" /var/log/messages 2>/dev/null | tail -1; }
+lab_sshd_dice() {
+    grep -E ' (sshd|sshd-session)\[[0-9]+\]: ' /var/log/messages 2>/dev/null \
+        | grep -E "$1" | tail -1
+}
 
 # lab_log_azzera — da chiamare nel seed: senza, il testimone dell'esercizio
 # precedente resta li' e un check passa senza che nessuno abbia fatto niente.

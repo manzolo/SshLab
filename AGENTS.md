@@ -4,10 +4,10 @@ Istruzioni per un agente che lavora in questo repository.
 
 ## Leggi questi due file prima di scrivere una riga
 
-1. **[`STATO.md`](STATO.md)** — cos'è fatto, cosa manca, l'architettura e **gli undici guasti
+1. **[`STATO.md`](STATO.md)** — cos'è fatto, cosa manca, l'architettura e **i dodici guasti
    già pagati**. Diversi pezzi di codice sembrano sovra-ingegnerizzati e non lo sono: sono
    la cicatrice di un bug reale. Disfarli li fa tornare.
-2. **[`BACKLOG.md`](BACKLOG.md)** — il lavoro che resta: i capitoli 2…12, con per ciascuno
+2. **[`BACKLOG.md`](BACKLOG.md)** — il lavoro che resta: i capitoli 5…12, con per ciascuno
    **l'invariante misurabile** di ogni esercizio, e i quattro lavori di infrastruttura che
    vengono prima.
 
@@ -19,7 +19,7 @@ Istruzioni per un agente che lavora in questo repository.
 browser: kernel reale via v86 (WASM), OpenSSH vero dei due lati, xterm.js. Sito statico
 bilingue IT/EN, zero dipendenze a runtime, zero build del sito.
 
-Stato: **motore e infrastruttura finiti e misurati, 1 capitolo su 12 scritto.**
+Stato: **motore e infrastruttura finiti e misurati, 4 capitoli su 12 scritti.**
 
 ## Prima di cominciare
 

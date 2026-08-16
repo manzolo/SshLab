@@ -141,6 +141,13 @@ lab_log_azzera
 lab_login_riuscito manzolo $opzioni -o IdentitiesOnly=yes \
     -i /home/manzolo/.ssh/agent-esca -i /home/manzolo/.ssh/agent-buona >/dev/null || \
     fallisci "login con una esca seguita dalla chiave giusta"
+# Leggere il registro con sudo aggiunge una riga che contiene il testo cercato.
+# Il testimone deve restare sshd, non il comando usato per interrogarlo.
+printf '%s\n' "Aug 16 12:00:00 pc auth.notice sudo: COMMAND=/bin/grep 'Accepted publickey' /var/log/messages" \
+    >> /var/log/messages
+riga_sshd=$(lab_sshd_dice 'Accepted publickey')
+printf '%s\n' "$riga_sshd" | grep -Eq ' (sshd|sshd-session)\[[0-9]+\]: ' || \
+    fallisci "lab_sshd_dice ha scambiato la riga sudo per il testimone"
 offerte=$(lab_offerte manzolo) || fallisci "conto delle offerte assente"
 [ "$offerte" -ge 1 ] && [ "$offerte" -le 2 ] || \
     fallisci "conto delle offerte inatteso: $offerte"
