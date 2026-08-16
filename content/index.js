@@ -1,8 +1,7 @@
 // L'indice dei capitoli. Elenca SOLO quelli che esistono davvero.
 //
-// I capitoli non ancora scritti compaiono lo stesso nel sommario, disattivati ma
-// con il loro obiettivo visibile: la roadmap sta dentro il prodotto. Un vuoto
-// dichiarato toglie l'ansia meglio di un vuoto nascosto.
+// Eventuali capitoli annunciati ma non ancora scritti compaiono nel sommario
+// disattivati, con il loro obiettivo visibile.
 //
 // Qui non c'e' il campo `runtime` del lab fratello: la' serviva perche' alcuni
 // capitoli giravano in un container Docker sul computer di chi studia. Qui tutto
@@ -17,11 +16,10 @@ export const CAPITOLI = [
     { id: "ch06", num: 6, carica: () => import("./ch06/chapter.js") },
     { id: "ch07", num: 7, carica: () => import("./ch07/chapter.js") },
     { id: "ch08", num: 8, carica: () => import("./ch08/chapter.js") },
+    { id: "ch09", num: 9, carica: () => import("./ch09/chapter.js") },
 ];
 
-// Quello che verra', dichiarato prima di essere scritto (vedi sopra).
 export const IN_ARRIVO = [
-    { num: 9,  titolo: { it: "La passphrase", en: "The passphrase" } },
     { num: 10, titolo: { it: "ssh-agent", en: "ssh-agent" } },
     { num: 11, titolo: { it: "Troppe chiavi: IdentitiesOnly", en: "Too many keys: IdentitiesOnly" } },
     { num: 12, titolo: { it: "Ruotare una chiave senza chiudersi fuori", en: "Rotating a key without locking yourself out" } },
