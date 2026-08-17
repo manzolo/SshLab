@@ -20,6 +20,7 @@
     "test:cwd": "node tests/regressione-cwd.mjs",
     "test:identita": "node tests/regressione-identita.mjs",
     "test:tastiera": "node tests/regressione-tastiera.mjs",
+    "test:intestazione": "node tests/regressione-intestazione.mjs",
     "test:regressione": "npm run test:consegna && npm run test:cwd && npm run test:identita && npm run test:tastiera",
     "spike": "node tools/spike.mjs",
     "e2e": "node tools/e2e.mjs http://127.0.0.1:8802/",

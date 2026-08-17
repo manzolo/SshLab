@@ -28,6 +28,7 @@ npm run image     # ~4 min. images/ NON è nel repo. Serve Docker + zstd + pytho
 npm run serve     # http://localhost:8802 — i moduli ES non si caricano da file://
 npm test          # attesi 2 file / 16 controlli
 npm run e2e       # Chrome headless, atteso tutto verde
+npm run test:intestazione # la barra in cima a 37 larghezze, IT ed EN (serve `serve` attivo)
 npm run test:labs # infrastruttura vera + ogni esercizio su tre semi
 npm run test:regressione # consegna, CWD, identita' e tastiera dal terminale
 ```

@@ -36,6 +36,7 @@ npm run serve     # http://localhost:8802  (i moduli ES non si caricano da file:
 
 npm test          # ~1 s   — struttura, bilinguismo, opzioni VM. Attesi: 60/60
 npm run e2e       # ~1 min — Chrome headless sul sito servito. Atteso: tutto verde
+npm run test:intestazione # ~20 s — la barra in cima a 37 larghezze, IT ed EN (serve `serve`)
 npm run test:labs # ~15 min — infrastruttura vera + ogni esercizio su tre semi
 npm run test:regressione # ~3 min — consegna, CWD, identita' e tastiera dal terminale
 ```
@@ -209,6 +210,14 @@ fallisce su un account che non ha ancora una password.
   scambiavano progressi, semi e lingua.
 - **Il selettore della navigazione da tastiera è `.host`, non `.terminale`**: sbagliarlo
   significa che la freccia destra premuta dentro `vi` cambia capitolo.
+- **`min-width: 0` sul marchio della barra fa uscire il testo, non sparire.** Serve (senza,
+  i pulsanti finiscono fuori schermo), ma sotto i ~560px il marchio si stringe più del suo
+  testo e il testo che avanza finisce **sotto i pulsanti**: su un telefono da 390px si
+  leggeva «SSH Lab» a metà dietro «Capitoli», e la sigla si spezzava sul trattino, «EDU-»
+  sopra e «SSH» sotto. → `white-space: nowrap` sulla sigla e, sotto i 560px, il nome via e
+  i comandi che vanno a capo tra loro. Lo misura `npm run test:intestazione`, che guarda
+  **dove finiscono i pixel** a 37 larghezze: nessun test che legge il DOM lo vedrebbe, gli
+  elementi ci sono tutti e rispondono al clic.
 
 ### 5.7 · `ssh-keygen -lf privata` puo' leggere la pubblica sbagliata
 

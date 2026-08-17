@@ -70,10 +70,31 @@ a { color: var(--phosphor); }
     font: 600 11px/1 var(--mono); letter-spacing: .14em;
     color: var(--screen); background: var(--phosphor);
     padding: 4px 6px; border-radius: 3px;
+    /* Senza questo il browser spezza sul trattino: "EDU-" e "SSH" su due righe
+       dentro il riquadro, che e' la prima cosa che si vedeva sul telefono. */
+    white-space: nowrap;
 }
 .nome { font-weight: 600; font-size: 16px; }
 .claim { color: var(--ink-faint); font-size: 12.5px; }
 @media (max-width: 900px) { .claim { display: none; } }
+
+/* Sotto i 560px il marchio e i quattro comandi non stanno piu' sulla stessa riga.
+   Il marchio ha min-width:0 e quindi si stringe volentieri, ma il testo che avanza
+   non sparisce: esce dal suo riquadro e finisce SOTTO i pulsanti — "SSH Lab" si
+   leggeva a meta' dietro "Capitoli". Qui il nome si toglie (la sigla dice gia' di
+   che lab si tratta) e i comandi vanno a capo tra loro invece che fuori schermo. */
+@media (max-width: 560px) {
+    /* I comandi vanno a capo tra loro: la sigla resta in cima, allineata alla prima
+       riga di pulsanti invece che a meta' delle due (con align-items:center finiva
+       a mezz'aria in un buco a sinistra). */
+    .barra { gap: 8px 10px; padding: 8px 12px; align-items: flex-start; }
+    .marchio { flex: 0 0 auto; }
+    .sigla { padding: 9px 7px; }
+    .nome { display: none; }
+    .azioni { flex: 1; flex-wrap: wrap; justify-content: flex-end; gap: 8px 6px; }
+    .btn { padding: 6px 9px; }
+    .switch button { padding: 6px 8px; }
+}
 
 .azioni { display: flex; align-items: center; gap: 8px; }
 
