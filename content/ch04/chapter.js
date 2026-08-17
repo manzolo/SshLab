@@ -107,7 +107,7 @@ export default {
 
         { kind: "recap", table: [
             { cmd: "ssh-copy-id -i chiave.pub utente@host", what: { it: "aggiunge una pubblica sul server", en: "add a public key on the server" }, flag: { it: "la password autorizza l'operazione iniziale", en: "the password authorises the initial operation" } },
-            { cmd: "ssh -o BatchMode=yes utente@host", what: { it: "prova un login senza domande", en: "test a login without prompts" }, flag: { it: "fallisce se servirebbe una password", en: "fails if a password would be required" } },
+            { cmd: "ssh -o BatchMode=yes utente@host", what: { it: "prova un login senza domande", en: "test a login without prompts" }, flag: { it: "fallisce invece di chiedere la password", en: "fails if a password would be required" } },
             { cmd: "~/.ssh/authorized_keys", what: { it: "elenca le pubbliche ammesse per quell'utente", en: "list public keys allowed for that user" }, flag: { it: "sta sul server, una riga per chiave", en: "lives on the server, one line per key" } },
             { cmd: "awk '$6 ~ /^sshd/ && /Accepted publickey/' /var/log/messages", what: { it: "dice quale impronta sshd ha accettato", en: "show which fingerprint sshd accepted" }, flag: { it: "eseguilo sul server, spesso con sudo", en: "run it on the server, often with sudo" } },
         ] },
