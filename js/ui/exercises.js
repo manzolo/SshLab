@@ -25,17 +25,20 @@ let esCorrente = null;
 let contenitore = null;
 let pronta = false;
 let alCambio = () => {};
+let alPreparazione = () => {};
+let preparando = false;
 
-export function inizializzaEsercizi(nodo, onCambio) {
+export function inizializzaEsercizi(nodo, onCambio, onPreparazione) {
     contenitore = nodo;
     alCambio = onCambio || (() => {});
+    alPreparazione = onPreparazione || (() => {});
 }
 
 export function macchinaPronta(v) { pronta = v; }
 
 export const esercizioCorrente = () => esCorrente;
 
-export function disegnaEsercizi(cap) {
+export async function disegnaEsercizi(cap) {
     capCorrente = cap;
     esCorrente = null;
     contenitore.replaceChildren();
@@ -55,7 +58,7 @@ export function disegnaEsercizi(cap) {
             el("span", "es-nome", t("esercizio", i + 1)),
             el("span", "es-tipo", es.tipo ? t("tipo" + es.tipo[0].toUpperCase() + es.tipo.slice(1)) : ""),
         );
-        testa.onclick = () => apri(cap, es, box);
+        testa.onclick = () => { if (!preparando) apri(cap, es, box); };
         box.append(testa);
         box.append(el("div", "es-corpo"));
         contenitore.append(box);
@@ -64,10 +67,22 @@ export function disegnaEsercizi(cap) {
     // Il primo non ancora fatto si apre da solo: e' quasi sempre quello che vuoi.
     const primo = cap.exercises.find(e => !eFatto(`${cap.id}.${e.id}`)) || cap.exercises[0];
     const nodo = contenitore.querySelector(`[data-es="${primo.id}"]`);
-    if (nodo) apri(cap, primo, nodo);
+    if (nodo) await apri(cap, primo, nodo);
+}
+
+async function conBancoInPreparazione(azione) {
+    if (preparando) return;
+    preparando = true;
+    alPreparazione(true);
+    try { return await azione(); }
+    finally {
+        preparando = false;
+        alPreparazione(false);
+    }
 }
 
 async function apri(cap, es, box) {
+    if (preparando) return;
     const gia = box.classList.contains("aperto");
     contenitore.querySelectorAll(".es").forEach(b => b.classList.remove("aperto"));
     if (gia) { esCorrente = null; return; }
@@ -144,7 +159,7 @@ async function apri(cap, es, box) {
         const testo = btn.textContent;
         btn.disabled = true; btn.textContent = "…";
         try {
-            await azione();
+            await conBancoInPreparazione(azione);
             zona.replaceChildren();
             scriviNota(UART.pc, nota, 79);
             scriviNota(UART.server, nota, 179);
@@ -159,7 +174,7 @@ async function apri(cap, es, box) {
     // Solo adesso, con i gestori gia' collegati, si prepara il mondo e si accendono
     // i pulsanti. L'ordine e' la correzione: prima i gestori, poi l'attesa.
     if (pronta) {
-        await prepara(semePer(`${cap.id}.${es.id}`));
+        await conBancoInPreparazione(() => prepara(semePer(`${cap.id}.${es.id}`)));
         btnVer.disabled = btnRic.disabled = btnNuo.disabled = false;
     }
 }

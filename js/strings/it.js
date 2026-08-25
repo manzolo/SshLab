@@ -22,6 +22,7 @@ export default {
     labScarico: "Scarico la macchina… {0}%",
     labAvvio: "Avvio le due macchine…",
     labPronta: "Macchine pronte",
+    labPreparazione: "Preparo l'esercizio… terminali in pausa",
     labErrore: "Immagine non compilata. Vedi lab/README.md: <code>make -C lab all</code>",
     labReimposta: "Reimposta le macchine",
     labReimpostaTitle: "Riporta tutte e due le macchine allo stato iniziale. Usalo senza timore: è la rete di sicurezza.",

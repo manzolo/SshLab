@@ -229,6 +229,7 @@ body.pro .probox { display: block; }
 .lab-titolo { font: 600 11px var(--mono); letter-spacing: .14em; color: var(--ink-faint); }
 .lab-stato { font-size: 12px; color: var(--ink-soft); }
 .lab-stato.pronta { color: var(--verde); }
+.lab-stato.preparazione { color: var(--amber); }
 .lab-stato.errore { color: var(--rosso); }
 .spazio { flex: 1; }
 
@@ -242,7 +243,7 @@ body.pro .probox { display: block; }
    Per questo il laboratorio qui prende tutta la larghezza della pagina, invece di
    stare in una colonna stretta come nel lab fratello. */
 
-.banco { display: flex; min-height: 0; flex: 0 0 auto; width: 100%; overflow: hidden; }
+.banco { position: relative; display: flex; min-height: 0; flex: 0 0 auto; width: 100%; overflow: hidden; }
 
 .host {
     /* `flex: 1 1 0` e non `1 1 50%`: xterm disegna una griglia con una larghezza
@@ -288,6 +289,15 @@ body.pro .probox { display: block; }
     min-width: 0; overflow: hidden;      /* vedi la nota su .host */
 }
 .host-schermo .xterm { height: 100%; }
+.lab.preparazione .host-schermo {
+    opacity: .38; pointer-events: none; filter: saturate(.35);
+}
+.lab.preparazione .banco::after {
+    content: attr(data-busy-label); position: absolute; inset: 0; z-index: 5;
+    display: grid; place-items: center; pointer-events: all;
+    background: rgb(13 17 23 / .58); color: var(--amber);
+    font: 600 13px var(--mono); letter-spacing: .04em;
+}
 
 /* le schede: servono solo su schermo stretto */
 .schede { display: none; }

@@ -21,6 +21,7 @@ export default {
     labScarico: "Downloading the machine… {0}%",
     labAvvio: "Booting both machines…",
     labPronta: "Machines ready",
+    labPreparazione: "Preparing the exercise… terminals paused",
     labErrore: "Image not built. See lab/README.md: <code>make -C lab all</code>",
     labReimposta: "Reset both machines",
     labReimpostaTitle: "Puts both machines back to their initial state. Use it without fear: it is the safety net.",

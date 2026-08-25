@@ -122,6 +122,30 @@ const ko = (m) => { console.log(`  ✗ ${m}`); problemi.push(m); esitoFinale = 1
         ? ok(`due host distinti: ${ipPc} e ${ipSrv}`)
         : ko(`i due host non hanno indirizzi distinti: "${ipPc}" / "${ipSrv}"`);
 
+    // Il seed dell'esercizio successivo puo' durare diversi secondi. Il vecchio
+    // terminale non deve accettare comandi destinati a un mondo che sta per
+    // essere cancellato: segnale visivo e blocco reale devono coincidere.
+    const cambioGrezz = await val(`(async () => {
+        document.querySelector('[data-es="e2"] .es-testa').click();
+        let visto = false, inputFermo = false;
+        const limite = Date.now() + 30000;
+        while (Date.now() < limite) {
+            const occupato = document.getElementById('pannelloLab').classList.contains('preparazione');
+            if (occupato) {
+                visto = true;
+                if (!window.__sshlab.term.inputTerminaliSonoAbilitati()) inputFermo = true;
+            }
+            if (visto && !occupato) break;
+            await new Promise(r => setTimeout(r, 20));
+        }
+        return JSON.stringify({ visto, inputFermo,
+            riattivato: window.__sshlab.term.inputTerminaliSonoAbilitati() });
+    })()`);
+    const cambio = JSON.parse(cambioGrezz || "{}");
+    (cambio.visto && cambio.inputFermo && cambio.riattivato)
+        ? ok("cambio esercizio: terminali in pausa durante il seed e riattivati dopo")
+        : ko(`cambio esercizio non atomico: ${cambioGrezz}`);
+
     // 3) il ciclo didattico, su OGNI capitolo del corso (vedi in testa al file)
     console.log(`  · ${CAPITOLI.length} capitoli da provare: ${CAPITOLI.join(" ")}`);
     for (const capId of CAPITOLI) {
