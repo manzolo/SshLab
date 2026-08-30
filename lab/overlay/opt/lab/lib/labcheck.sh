@@ -132,16 +132,24 @@ lab_done() {
 # Ripulire quello che ha scritto l'utente prima di rimostrarglielo nasconde proprio
 # la cosa che deve vedere.
 lab_answer_read() {
-    tr -d '\n\r' < "$LAB_STATE/answer" 2>/dev/null \
+    # 2>/dev/null PRIMA di < : le redirezioni si applicano in ordine, e se il
+    # file manca l'errore "can't open" uscirebbe sullo stderr ancora aperto,
+    # finendo dentro il verdetto.
+    tr -d '\n\r' 2>/dev/null < "$LAB_STATE/answer" \
         | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//'
 }
 
 # lab_answer_eq ID ATTESO — confronta la risposta consegnata con quella
-# ricalcolata dal mondo seminato (mai con una costante scritta a mano)
+# ricalcolata dal mondo seminato (mai con una costante scritta a mano).
+# ATTENZIONE: qui NON si passa da lab_eq, che stamperebbe `want=<atteso>`
+# nel verdetto — basterebbe cliccare Verifica a vuoto e leggere la risposta.
+# Il verdetto mostra solo cio' che lo studente ha consegnato.
+# (Falla trovata su FsLab il 2026-08-30, chiusa qui alla radice.)
 lab_answer_eq() {
     a=$(lab_answer_read)
     lab_fact answer "${a:-(nessuna risposta consegnata)}"
-    lab_eq "$1" "$2" "$a"
+    if [ "$a" = "$2" ]; then lab_check "$1" 0
+    else lab_check "$1" 1 "${a:-(vuoto)}"; fi
 }
 
 # ---------------------------------------------------------------- il mondo a due

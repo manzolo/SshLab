@@ -9,10 +9,10 @@ if [ "$mondo" = legittimo ]; then
     lab_check conseguenza-sicura "$rc" "${rc:+login fallito}" "login rigoroso riuscito"
 else
     cmp -s "$LAB_STATE/known_hosts_prima" /home/manzolo/.ssh/known_hosts
-    lab_check decisione-coerente $? "known_hosts modificato" "known_hosts identico"
+    lab_check decisione-coerente $? "known_hosts modificato"
     risposta=$(lab_answer_read)
     accepted=$(lab_sshd_dice 'Accepted')
     [ "$risposta" = no ] && [ -z "$accepted" ]
-    lab_check conseguenza-sicura $? "risposta=${risposta:-(nessuna)}, accepted=${accepted:-(nessuno)}" "risposta=no, nessun Accepted"
+    lab_check conseguenza-sicura $? "risposta=${risposta:-(nessuna)}, accepted=${accepted:-(nessuno)}"
 fi
 lab_done

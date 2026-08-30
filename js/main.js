@@ -5,9 +5,9 @@ import { get, set } from "./storage.js";
 import { CAPITOLI, IN_ARRIVO, capitolo, primoCapitolo } from "../content/index.js";
 import { disegnaCapitolo } from "./ui/chapter.js";
 import { inizializzaEsercizi, disegnaEsercizi, macchinaPronta, esercizioCorrente } from "./ui/exercises.js";
-import { apriSommario, apriIntro } from "./ui/overlays.js";
+import { apriSommario, apriIntro, apriBasi } from "./ui/overlays.js";
 import { avvia, onProgresso, reimposta } from "./lab/machine.js";
-import { attendiAgente } from "./lab/agent.js";
+import { attendiAgente, annullaRichiesteInSospeso } from "./lab/agent.js";
 import { creaTerminale, adatta, pulisciTerminale, scriviNota, suOutput, abilitaInputTerminali, UART } from "./lab/terminal.js";
 
 const $ = id => document.getElementById(id);
@@ -44,7 +44,12 @@ function aggiornaSwitch(sel, chiave, valore) {
 
 // ------------------------------------------------------------------ navigazione
 
-async function vaiA(id, spingiUrl = true) {
+// Un cambio di lingua arrivato MENTRE il capitolo si sta ridisegnando non va perso:
+// `vaiA` lo scarterebbe (navigando), la chrome cambierebbe lingua e il capitolo no —
+// e non recupererebbe piu'. (Segnalato da Andrea il 2026-08-30 su FsLab.)
+let ridisegnoInCoda = false;
+
+async function vaiA(id, spingiUrl = true, opzioni = {}) {
     if (navigando) return;
     navigando = true;
     let cap;
@@ -63,11 +68,12 @@ async function vaiA(id, spingiUrl = true) {
         disegnaCapitolo(cap, $("capitolo"), vaiA);
         aggiornaPiede(cap);
         $("btnPrec").disabled = $("btnSucc").disabled = true;
-        await disegnaEsercizi(cap);
+        await disegnaEsercizi(cap, opzioni);
         aggiornaProgresso();
     } finally {
         navigando = false;
         if (cap) aggiornaPiede(cap);
+        if (ridisegnoInCoda) { ridisegnoInCoda = false; vaiA(idCorrente, false, { soloTesto: true }); }
     }
 }
 
@@ -121,9 +127,19 @@ document.addEventListener("keydown", e => {
 });
 
 $("btnIndice").onclick = () => apriSommario(idCorrente, vaiA);
-$("btnIntro").onclick = () => apriIntro();
+// "Basi" e' del CAPITOLO corrente: la teoria distillata di questa lezione,
+// richiamabile mentre lavori. La guida globale resta linkata li' dentro
+// (e si apre da sola alla prima visita, piu' sotto).
+$("btnIntro").onclick = async () => apriBasi(await capitolo(idCorrente).catch(() => null));
 
-onLangChange(() => { refreshStatic(); if (idCorrente) vaiA(idCorrente, false); });
+// Cambiare lingua ridisegna solo il TESTO: il mondo nella macchina e' gia' quello
+// giusto e riseminarlo cancellerebbe il lavoro fatto.
+onLangChange(() => {
+    refreshStatic();
+    if (!idCorrente) return;
+    if (navigando) { ridisegnoInCoda = true; return; }
+    vaiA(idCorrente, false, { soloTesto: true });
+});
 
 // ------------------------------------------------------------------ macchina
 
@@ -145,6 +161,10 @@ $("btnReimposta").onclick = async () => {
     impostaBancoInPreparazione(true);
     try {
         await reimposta();
+        // Le richieste scritte sulla seriale PRIMA del ripristino sono orfane:
+        // rifiutarle subito sblocca la risemina qui sotto, che altrimenti si
+        // accoderebbe a un fantasma fino al timeout.
+        annullaRichiesteInSospeso(t("labReimpostaAnnullo"));
         pulisciTerminale();                     // tutti e due
         scriviNota(UART.pc, t("labReimposta"), 79);
         scriviNota(UART.server, t("labReimposta"), 179);

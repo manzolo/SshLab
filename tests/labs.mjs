@@ -126,6 +126,20 @@ async function provaEsercizio(cap, es) {
         const sol = await chiedi("solve", dir);
         if (!sol.ok && sol.code !== 0) { /* alcune soluzioni finiscono con exit non-zero innocuo */ }
         const dopo = await chiedi("check", dir);
+        // il verdetto a risposta vuota non deve contenere la risposta attesa
+        // (ne' come `want=` ne' come fatto): altrimenti basta cliccare Verifica
+        // a vuoto e leggerla. Si confronta con cio' che la soluzione ha consegnato.
+        const risposta = ((await chiedi("sh", "cat /opt/lab/state/answer 2>/dev/null")).out || "").trim();
+        if (risposta) {
+            const verdetto = (prima.out || "").split("\n").filter(l => !l.startsWith("EDU RESULT")).join("\n");
+            const reRisposta = new RegExp(`(^|[\\s=|])${risposta.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}($|[\\s|])`, "m");
+            const trapela = /\bwant=/.test(verdetto) || reRisposta.test(verdetto);
+            if (trapela) {
+                const colpevole = verdetto.split("\n").find(l => /\bwant=/.test(l) || reRisposta.test(l)) || "";
+                ko(`${etichetta} seme ${seme}: il verdetto a vuoto rivela la risposta (${risposta}) — ${colpevole.slice(0, 160)}`);
+            }
+            else ok(`${etichetta} seme ${seme}: il verdetto a vuoto non rivela la risposta`);
+        }
         if (dopo.ok) ok(`${etichetta} seme ${seme}: la soluzione passa`);
         else ko(`${etichetta} seme ${seme}: la soluzione NON passa — ${(dopo.out || "").replace(/\n/g, " | ").slice(0, 220)}`);
     }

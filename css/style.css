@@ -340,6 +340,16 @@ body.pro .probox { display: block; }
 .es.aperto .es-corpo { display: block; }
 .es-brief { font-size: 14px; margin: 0 0 11px; }
 
+.es-come-consegnare { font-size: 13px; color: var(--ink-soft); margin: -5px 0 11px; }
+
+.basi h3 { margin: 18px 0 6px; }
+.basi-lineone { color: var(--ink-soft); font-style: italic; margin: 0 0 4px; }
+.basi-recap { border-collapse: collapse; width: 100%; }
+.basi-recap td { padding: 6px 10px 6px 0; border-bottom: 1px solid var(--panel-edge); vertical-align: top; font-size: 13.5px; }
+.basi-recap em { color: var(--ink-faint); font-style: normal; }
+.basi-glossario { color: var(--ink-faint); margin-top: 14px; }
+.basi > .btn { margin-top: 16px; }
+
 .es-barra { display: flex; gap: 7px; flex-wrap: wrap; align-items: center; margin-bottom: 10px; }
 
 .verdetto { border-radius: var(--r); overflow: hidden; border: 1px solid var(--panel-edge); }

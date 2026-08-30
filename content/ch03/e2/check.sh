@@ -18,5 +18,5 @@ fp_secondo=
 }
 lab_fact impronte "${fp_primo:-(prima non valida)} / ${fp_secondo:-(seconda non valida)}"
 [ "$valida" -eq 1 ] && [ -n "$fp_primo" ] && [ "$fp_primo" = "$fp_secondo" ]
-lab_check gemelle-trovate $? "${risposta:-(nessuna)}" "due file seminati con la stessa impronta"
+lab_check gemelle-trovate $? "${risposta:-(nessuna)}"
 lab_done

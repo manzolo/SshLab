@@ -77,7 +77,48 @@ export async function apriSommario(idCorrente, vaiA) {
     apriVelo([el("h2", null, t("navIndice")), griglia]);
 }
 
-// ---------------------------------------------------------------- guida "Basi"
+// ---------------------------------------------------------------- basi del capitolo
+
+/** Le basi del CAPITOLO corrente, richiamabili mentre si lavora giu' tra
+ *  terminali ed esercizi: storia, immagine mentale, meccanismo e la tabella
+ *  dei comandi con le trappole. Niente contenuto nuovo: e' la teoria che sta
+ *  gia' in cima alla pagina, distillata in un velo che si apre da dove sei.
+ *  (Chiesto da Andrea il 2026-08-30 su FsLab: un aiuto sul focus della lezione
+ *  in corso; prima questo pulsante apriva solo la guida globale del laboratorio.) */
+export function apriBasi(cap, vaiAlPrimo) {
+    if (!cap) return apriIntro(vaiAlPrimo);
+    const c = el("div", "basi");
+    const blocco = kind => (cap.blocks || []).find(b => b.kind === kind);
+    const sez = (titolo, bi) => { if (bi) c.append(el("h3", null, titolo), el("p", null, tr(bi))); };
+
+    c.append(el("p", "basi-lineone", tr(cap.oneLiner)));
+    sez(t("basiStoria"), blocco("hook")?.html);
+    sez(t("basiImmagine"), blocco("analogy")?.html);
+    sez(t("basiMeccanismo"), blocco("pro")?.html);
+
+    const recap = blocco("recap");
+    if (recap?.table?.length) {
+        c.append(el("h3", null, t("basiComandi")));
+        const tb = el("table", "basi-recap");
+        for (const r of recap.table) {
+            const riga = el("tr");
+            riga.append(el("td", null, `<code>${r.cmd}</code>`),
+                        el("td", null, `${tr(r.what)}<br><em>${tr(r.flag)}</em>`));
+            tb.append(riga);
+        }
+        c.append(tb);
+    }
+    if (cap.glossary?.length)
+        c.append(el("p", "basi-glossario", cap.glossary.map(g => `<code>${g}</code>`).join(" · ")));
+
+    const bLab = el("button", "btn mini", t("basiLab"));
+    bLab.onclick = () => apriIntro(vaiAlPrimo);
+    c.append(bLab);
+
+    apriVelo([el("h2", null, `${t("navIntro")} — ${tr(cap.title)}`), c]);
+}
+
+// ---------------------------------------------------------------- guida del laboratorio
 
 export function apriIntro(vaiAlPrimo) {
     const c = el("div");

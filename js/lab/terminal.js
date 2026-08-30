@@ -83,7 +83,10 @@ export function creaTerminale(contenitore, uart) {
         if (inputAbilitato) accoda(uart, new TextEncoder().encode(d));
     });
     macchina().add_listener(`serial${uart}-output-byte`, b => {
-        term.write(String.fromCharCode(b));
+        // Il byte va a xterm com'e': il suo decoder UTF-8 con stato ricompone le
+        // sequenze multibyte anche spezzate fra scritture. Con fromCharCode ogni
+        // carattere non-ASCII (└─ di findmnt, le accentate) diventava "ââ".
+        term.write(new Uint8Array([b]));
         const t = terminali.get(uart);
         if (t) t.ascoltatoriOutput.forEach(f => f());
     });
@@ -198,3 +201,14 @@ export function scriviBlocco(uart, testo) {
 }
 
 export const svegliaTerminali = () => risveglia();
+
+/** Digita testo nel terminale indicato come se arrivasse dalla tastiera
+ *  (stessa coda ritmata e codifica UTF-8 dell'input vero), senza Invio:
+ *  il valore lo scrive lo studente. Poi porta il terminale in vista. */
+export function digitaNelTerminale(uart, testo) {
+    const t = terminali.get(uart);
+    if (!t || !inputAbilitato) return;
+    accoda(uart, new TextEncoder().encode(testo));
+    t.term.element?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    t.term.focus();
+}

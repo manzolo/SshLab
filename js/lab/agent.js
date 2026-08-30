@@ -37,7 +37,7 @@ function inizializza() {
             const r = inAttesa.get(msg.id);
             // Le risposte con id diverso da quello atteso si scartano: protegge
             // dalle risposte in ritardo arrivate dopo un timeout.
-            if (r) { inAttesa.delete(msg.id); r(msg); }
+            if (r) { inAttesa.delete(msg.id); r.res(msg); }
         }
     });
     // L'agente ha gia' annunciato "ready" PRIMA dello snapshot, quindi quel messaggio
@@ -51,12 +51,25 @@ function chiedi(op, ...arg) {
     const riga = `${id} ${op}${arg.length ? " " + arg.join(" ") : ""}\n`;
     const ms = TIMEOUT[op] ?? 15000;
     return new Promise((res, rej) => {
-        inAttesa.set(id, res);
+        inAttesa.set(id, { res, rej });
         macchina().serial_send_bytes(1, new TextEncoder().encode(riga));
         setTimeout(() => {
             if (inAttesa.delete(id)) rej(new Error(`la verifica non ha risposto (${op})`));
         }, ms);
     });
+}
+
+/** Il ripristino dello snapshot rende orfana ogni richiesta in volo: la sua
+ *  risposta non arrivera' MAI (l'agente rinasce nello stato dello snapshot,
+ *  senza comandi pendenti). Senza questo taglio, la risemina resta appesa
+ *  fino al timeout e "Reimposta la macchina" sembra non fare niente.
+ *  (Segnalato da Andrea il 2026-08-30 su FsLab; stesso motore.) */
+export function annullaRichiesteInSospeso(motivo) {
+    for (const [id, r] of inAttesa) {
+        inAttesa.delete(id);
+        r.rej(new Error(motivo || "richiesta annullata dal ripristino della macchina"));
+    }
+    buffer = "";
 }
 
 const b64 = testo => btoa(String.fromCharCode(...new TextEncoder().encode(testo)));
