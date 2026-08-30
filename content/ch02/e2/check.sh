@@ -13,5 +13,5 @@ fp_candidata=
 lab_fact impronte "privata=${fp_privata:-(assente)} candidata=${fp_candidata:-(non valida)}"
 
 [ "$valida" -eq 1 ] && [ -n "$fp_privata" ] && [ "$fp_privata" = "$fp_candidata" ]
-lab_check pubblica-giusta $? "${risposta:-(nessuna)}" "il file con la stessa impronta della privata"
+lab_check pubblica-giusta $? "${risposta:-(nessuna)}"
 lab_done
