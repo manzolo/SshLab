@@ -144,7 +144,8 @@ barare, scritto apposta, **fallisce**.
 
 Fa parte della collana **EDU-\*** di [manzolo](https://github.com/manzolo):
 
-- [EDU-LINUX · Linux Lab](https://github.com/manzolo/LinuxLab) — la shell, 22 capitoli con un kernel vero
+- [EDU-LINUX · Linux Lab](https://github.com/manzolo/LinuxLab) — la shell, 24 capitoli con un kernel vero
+- [EDU-FS · Filesystem Lab](https://github.com/manzolo/FsLab) — la radice Linux cartella per cartella: /etc è la promessa, /proc è la verità
 - [EDU-CRYPTO · Cryptography Playground](https://github.com/manzolo/CryptoSimulator) — la matematica sotto le chiavi: RSA, Diffie-Hellman, hash
 - [EDU-NET · Network Simulator](https://github.com/manzolo/NetworkSimulator) — cosa succede sul cavo, pacchetto per pacchetto
 

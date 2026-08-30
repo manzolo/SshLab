@@ -143,7 +143,8 @@ purpose-written cheat **fails**.
 
 Part of the **EDU-\*** series by [manzolo](https://github.com/manzolo):
 
-- [EDU-LINUX · Linux Lab](https://github.com/manzolo/LinuxLab) — the shell, 22 chapters with a real kernel
+- [EDU-LINUX · Linux Lab](https://github.com/manzolo/LinuxLab) — the shell, 24 chapters with a real kernel
+- [EDU-FS · Filesystem Lab](https://github.com/manzolo/FsLab) — the Linux root, one directory at a time: /etc is the promise, /proc is the truth
 - [EDU-CRYPTO · Cryptography Playground](https://github.com/manzolo/CryptoSimulator) — the maths under the keys: RSA, Diffie-Hellman, hashing
 - [EDU-NET · Network Simulator](https://github.com/manzolo/NetworkSimulator) — what happens on the wire, packet by packet
 
