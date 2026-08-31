@@ -417,10 +417,18 @@ body.pro .probox { display: block; }
 /* ---------------------------------------------------------------- piede e velo */
 
 .piede {
-    display: flex; align-items: center; gap: 12px;
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
     padding: 8px 16px; background: var(--panel); border-top: 1px solid var(--panel-edge);
 }
 .etichetta { flex: 1; text-align: center; color: var(--ink-faint); font-size: 12.5px; }
+
+/* «Segnala un problema»: presente ma discreto. Sulle larghezze strette il piede
+   va a capo e il link finisce da solo sulla seconda riga, allineato a destra. */
+.piede .segnala {
+    margin-left: auto; white-space: nowrap;
+    color: var(--ink-faint); font-size: 12px; text-decoration: none;
+}
+.piede .segnala:hover { color: var(--ink); text-decoration: underline; }
 /* Perche' `Successivo` e' spento. Smorzata: e' una spiegazione, non un annuncio. */
 .piede-nota { opacity: .7; }
 .piede-nota::before { content: " · "; }

@@ -80,6 +80,11 @@ export default {
     passoSucc: "Passo successivo →",
 
 
+    // segnalazioni
+    segnala: "Segnala un problema",
+    segnalaTitle: "Apre su GitHub una segnalazione già compilata con capitolo, lingua, stato del laboratorio e browser.",
+    segnalaCorpo: "**Cosa non funziona?**\n\nDescrivi qui: cosa hai fatto, cosa ti aspettavi, cosa è successo.\n\n---\n_Dati raccolti dalla pagina (controlla e correggi se serve):_\n\n- Pagina: {0}\n- Capitolo: {1}\n- Lingua: {2}\n- Stato del laboratorio: {3}\n- Browser: `{4}`\n",
+
     // varie
     chiudi: "Chiudi",
     mobileAvviso: "I terminali vogliono una tastiera vera: da telefono puoi leggere tutto, ma per esercitarti torna dal computer.",

@@ -76,6 +76,10 @@ export default {
     passoSucc: "Next step →",
 
 
+    segnala: "Report a problem",
+    segnalaTitle: "Opens a GitHub issue pre-filled with chapter, language, lab status and browser.",
+    segnalaCorpo: "**What's wrong?**\n\nDescribe here: what you did, what you expected, what happened.\n\n---\n_Data collected by the page (check and correct if needed):_\n\n- Page: {0}\n- Chapter: {1}\n- Language: {2}\n- Lab status: {3}\n- Browser: `{4}`\n",
+
     chiudi: "Close",
     mobileAvviso: "The terminal needs a real keyboard: on a phone you can read everything, but come back from a computer to practise.",
     introTitolo: "From scratch",
