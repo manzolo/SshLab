@@ -18,7 +18,11 @@ import { shell } from "./agent.js";
 
 // La chiave e' il numero della seriale, che e' anche l'identita' della macchina.
 const terminali = new Map();
-let inputAbilitato = true;
+// All'avvio il prompt dello snapshot compare prima che il primo esercizio sia
+// stato seminato. Tenerlo scrivibile in quella finestra mostrava per un istante
+// un banco "pronto", per poi bloccarlo mentre il mondo veniva ricostruito.
+// L'interfaccia lo abilita esplicitamente soltanto alla fine della preparazione.
+let inputAbilitato = false;
 
 export const UART = { pc: 0, server: 2 };
 

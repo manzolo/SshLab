@@ -84,19 +84,52 @@ const ko = (m) => { console.log(`  ✗ ${m}`); problemi.push(m); esitoFinale = 1
 
     console.log(`\nE2E — ${URL_BASE}`);
     const t0 = Date.now();
+    // Osserva l'avvio dentro la pagina, a intervalli abbastanza stretti da vedere
+    // anche un falso sblocco di pochi millisecondi. Campionare da CDP una volta al
+    // secondo non basta: era proprio cosi' che la vecchia regressione lo perdeva.
+    await cmd("Page.addScriptToEvaluateOnNewDocument", { source: `
+        window.__sshlabAvvio = { sbloccato: false, ribloccato: false };
+        window.__sshlabAvvio.timer = setInterval(() => {
+            const L = window.__sshlab;
+            if (!L) return;
+            const input = L.term.inputTerminaliSonoAbilitati();
+            const pausa = document.getElementById('pannelloLab')?.classList.contains('preparazione');
+            if (input) window.__sshlabAvvio.sbloccato = true;
+            if (window.__sshlabAvvio.sbloccato && pausa)
+                window.__sshlabAvvio.ribloccato = true;
+        }, 10);
+    ` });
     await cmd("Page.navigate", { url: URL_BASE });
     await cmd("Page.bringToFront");
 
-    // 1) la macchina parte
+    // 1) la macchina parte E il primo mondo e' pronto. `labStato.pronta` da solo
+    // in passato intercettava il breve istante fra lo snapshot e il seed: il test
+    // dichiarava pronta la pagina mentre subito dopo i terminali si bloccavano.
     let pronta = false;
+    let inputPrematuro = false;
     for (let i = 0; i < 90; i++) {
         await dormi(1000);
-        pronta = await val("!!(window.__sshlab && document.getElementById('labStato').classList.contains('pronta'))");
+        const fase = JSON.parse(await val(`JSON.stringify((() => {
+            if (!window.__sshlab) return { caricata: false };
+            const inPreparazione = document.getElementById('pannelloLab').classList.contains('preparazione');
+            const input = window.__sshlab.term.inputTerminaliSonoAbilitati();
+            const statoPronto = document.getElementById('labStato').classList.contains('pronta');
+            return { caricata: true, inPreparazione, input,
+                pronta: statoPronto && !inPreparazione && input };
+        })())`) || "{}");
+        if (fase.caricata && fase.input && !fase.pronta) inputPrematuro = true;
+        pronta = !!fase.pronta;
         if (pronta) break;
         const errore = await val("document.getElementById('labStato').classList.contains('errore')");
         if (errore) break;
     }
-    pronta ? ok(`macchina pronta in ${((Date.now() - t0) / 1000).toFixed(1)} s`) : ko("la macchina non è diventata pronta");
+    pronta ? ok(`macchina ed esercizio pronti in ${((Date.now() - t0) / 1000).toFixed(1)} s`) : ko("la macchina non è diventata pronta");
+    const avvio = JSON.parse(await val(`JSON.stringify((() => {
+        clearInterval(window.__sshlabAvvio?.timer);
+        return window.__sshlabAvvio || {};
+    })())`) || "{}");
+    (inputPrematuro || avvio.ribloccato) ? ko("i terminali sono diventati scrivibili prima della fine del seed")
+        : ok("terminali bloccati fino alla fine del primo seed");
     if (!pronta) { console.log(`\n${problemi.length} problemi`); process.exit(1); }
 
     // 2) i terminali hanno scritto qualcosa. TUTTI E DUE, ed e' il punto: un lab a

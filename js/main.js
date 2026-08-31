@@ -145,9 +145,18 @@ onLangChange(() => {
 
 const stato = $("labStato");
 onProgresso((fase, frazione) => {
-    if (fase === "scarico") stato.textContent = t("labScarico", Math.round(frazione * 100));
-    if (fase === "avvio") stato.textContent = t("labAvvio");
-    if (fase === "pronta") { stato.textContent = t("labPronta"); stato.className = "lab-stato pronta"; }
+    let testo;
+    if (fase === "scarico") testo = t("labScarico", Math.round(frazione * 100));
+    if (fase === "avvio") testo = t("labAvvio");
+    // `pronta` qui significa soltanto che v86 ha ripristinato lo snapshot. Il
+    // mondo dell'esercizio deve ancora essere seminato: dichiarare gia' pronte le
+    // macchine creava proprio il falso sblocco visibile al primo caricamento.
+    if (fase === "pronta") testo = t("labPreparazione");
+    if (!testo) return;
+    stato.textContent = testo;
+    stato.className = "lab-stato preparazione";
+    if ($("pannelloLab").classList.contains("preparazione"))
+        $("banco").dataset.busyLabel = testo;
 });
 
 // Reimposta la macchina: il ripristino dello snapshot blocca la pagina per qualche
@@ -196,6 +205,11 @@ function impostaBancoInPreparazione(attiva) {
 
 inizializzaEsercizi($("esercizi"), aggiornaProgresso, impostaBancoInPreparazione);
 
+// Il banco nasce occupato, non soltanto quando parte il seed. Lo snapshot mostra
+// i prompt prima che il mondo del primo esercizio sia pronto: senza questo stato
+// continuo i terminali sembrano utilizzabili per un istante e poi si ribloccano.
+impostaBancoInPreparazione(true);
+
 // Dopo un ripristino della macchina, il mondo dell'esercizio aperto e' sparito
 // insieme al resto: va riseminato, o il primo `Verifica` fallirebbe senza motivo.
 async function riseminaEsercizioCorrente() {
@@ -232,6 +246,9 @@ async function riseminaEsercizioCorrente() {
         // scriverebbe mai. Dopo qualche secondo li leggiamo comunque.
         setTimeout(() => { if ($("ipPc").textContent === "…") aggiornaIndirizzi(); }, 5000);
         await vaiA(idCorrente, false);   // ridisegna gli esercizi ora che la macchina c'e'
+        // `disegnaEsercizi` toglie gia' la pausa dopo un seed. Questo serve per i
+        // capitoli senza esercizi, che altrimenti resterebbero occupati per sempre.
+        impostaBancoInPreparazione(false);
     } catch (e) {
         stato.className = "lab-stato errore";
         stato.innerHTML = t("labErrore");
